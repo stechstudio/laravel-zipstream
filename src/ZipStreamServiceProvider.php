@@ -3,7 +3,6 @@
 namespace STS\ZipStream;
 
 use Illuminate\Support\ServiceProvider;
-use ZipStream\Option\Archive;
 use ZipStream\Option\Archive as ArchiveOptions;
 use ZipStream\Option\File as FileOptions;
 use ZipStream\Option\Method;
@@ -15,36 +14,10 @@ class ZipStreamServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        /*
-         * Optional methods to load your package assets
-         */
-        // $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'laravel-zipstream');
-        // $this->loadViewsFrom(__DIR__.'/../resources/views', 'laravel-zipstream');
-        // $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
-        // $this->loadRoutesFrom(__DIR__.'/routes.php');
-
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__.'/../config/config.php' => config_path('zipstream.php'),
             ], 'config');
-
-            // Publishing the views.
-            /*$this->publishes([
-                __DIR__.'/../resources/views' => resource_path('views/vendor/zipstream'),
-            ], 'views');*/
-
-            // Publishing assets.
-            /*$this->publishes([
-                __DIR__.'/../resources/assets' => public_path('vendor/zipstream'),
-            ], 'assets');*/
-
-            // Publishing the translation files.
-            /*$this->publishes([
-                __DIR__.'/../resources/lang' => resource_path('lang/vendor/zipstream'),
-            ], 'lang');*/
-
-            // Registering package commands.
-            // $this->commands([]);
         }
     }
 
@@ -62,6 +35,10 @@ class ZipStreamServiceProvider extends ServiceProvider
         $this->app->bind(FileOptions::class, function($app) {
             return $this->buildFileOptions($app['config']->get('zipstream.file'));
         });
+
+        $this->app->bind(ArchiveOptions::class, function($app) {
+            return $this->buildArchiveOptions($app['config']->get('zipstream.archive'));
+        });
     }
 
     /**
@@ -77,8 +54,8 @@ class ZipStreamServiceProvider extends ServiceProvider
      */
     protected function buildArchiveOptions(array $config)
     {
-        return tap(new ArchiveOptions(), function(ArchiveOptions $options) {
-
+        return tap(new ArchiveOptions(), function(ArchiveOptions $options) use($config) {
+            $options->setEnableZip64($config['zip64']);
         });
     }
 

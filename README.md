@@ -1,6 +1,10 @@
 # Streaming Zips with Laravel
 
-A fast and simple streaming zip file downloader for Laravel. Using this library will save you from having to write the zip to disk. Built on top of the excellent [ZipStream-PHP](https://github.com/maennchen/ZipStream-PHP]) library.
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/stechstudio/laravel-zipstream.svg?style=flat-square)](https://packagist.org/packages/stechstudio/laravel-zipstream)
+[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
+[![Quality Score](https://img.shields.io/scrutinizer/g/stechstudio/laravel-zipstream.svg?style=flat-square)](https://scrutinizer-ci.com/g/stechstudio/laravel-zipstream)
+
+A fast and simple streaming zip file downloader for Laravel. Using this library will save you from having to write the zip to disk. Built on top of the excellent [ZipStream-PHP](https://github.com/maennchen/ZipStream-PHP) library.
 
 ## Quickstart
 

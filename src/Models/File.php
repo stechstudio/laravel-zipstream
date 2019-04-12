@@ -50,7 +50,7 @@ abstract class File implements FileContract
      * @param string $source
      * @param string|null $zipPath
      *
-     * @return LocalFile|S3File
+     * @return FileContract
      */
     public static function make(string $source, ?string $zipPath = null)
     {
