@@ -6,10 +6,11 @@ use Aws;
 use Aws\S3\S3Client;
 use Aws\S3\StreamWrapper;
 use Aws\S3\S3UriParser;
+use function GuzzleHttp\Psr7\stream_for;
 use Psr\Http\Message\StreamInterface;
 use RuntimeException;
 
-class S3File extends ZipFile
+class S3File extends File
 {
     /** @var string */
     protected $region;
@@ -30,21 +31,6 @@ class S3File extends ZipFile
         if(!class_exists(S3Client::class, true)) {
             throw new RuntimeException("You must install the `aws/aws-sdk-php` for S3 file zipping support");
         }
-    }
-
-    /**
-     * @return StreamInterface
-     */
-    public function getHandle(): StreamInterface
-    {
-        if(!$this->handle) {
-            $this->handle = $this->getS3Client()->getObject([
-                'Bucket' => $this->getParsedPath()['bucket'],
-                'Key' => $this->getParsedPath()['key']
-            ])->get('Body');
-        }
-
-        return $this->handle;
     }
 
     /**
@@ -87,5 +73,26 @@ class S3File extends ZipFile
     public function getParsedPath(): array
     {
         return (new S3UriParser())->parse($this->getSourcePath());
+    }
+
+    /**
+     * @return StreamInterface
+     */
+    protected function buildReadableStream(): StreamInterface
+    {
+        return $this->getS3Client()->getObject([
+            'Bucket' => $this->getParsedPath()['bucket'],
+            'Key' => $this->getParsedPath()['key']
+        ])->get('Body');
+    }
+
+    /**
+     * @return StreamInterface
+     */
+    protected function buildWritableStream(): StreamInterface
+    {
+        $this->getS3Client()->registerStreamWrapper();
+
+        return stream_for(fopen($this->getSourcePath(), 'w'));
     }
 }

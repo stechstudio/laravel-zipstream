@@ -4,8 +4,9 @@ namespace STS\ZipStream\Models;
 
 use Illuminate\Support\Str;
 use Psr\Http\Message\StreamInterface;
+use RuntimeException;
 
-abstract class ZipFile
+abstract class File
 {
     /** @var string */
     protected $sourcePath;
@@ -14,7 +15,10 @@ abstract class ZipFile
     protected $zipPath;
 
     /** @var StreamInterface */
-    protected $handle;
+    protected $readStream;
+
+    /** @var StreamInterface */
+    protected $writeStream;
 
     /**
      * @param string $sourcePath
@@ -55,6 +59,18 @@ abstract class ZipFile
     }
 
     /**
+     * @param string $source
+     *
+     * @return LocalFile|S3File
+     */
+    public static function make(string $source)
+    {
+        return Str::startsWith($source, "s3://")
+            ? new S3File($source)
+            : new LocalFile($source);
+    }
+
+    /**
      * @return string
      */
     public function getName(): string
@@ -92,15 +108,36 @@ abstract class ZipFile
     /**
      * @return StreamInterface
      */
-    abstract public function getHandle(): StreamInterface;
+    public function getReadableStream(): StreamInterface
+    {
+        if(!$this->readStream) {
+            $this->readStream = $this->buildReadableStream();
+        }
+
+        return $this->readStream;
+    }
 
     /**
-     * @return void
+     * @return StreamInterface
      */
-    public function closeHandle(): void
+    public function getWritableStream(): StreamInterface
     {
-        $this->handle->close();
+        if(!$this->writeStream) {
+            $this->writeStream = $this->buildWritableStream();
+        }
+
+        return $this->writeStream;
     }
+
+    /**
+     * @return StreamInterface
+     */
+    abstract protected function buildReadableStream(): StreamInterface;
+
+    /**
+     * @return StreamInterface
+     */
+    abstract protected function buildWritableStream(): StreamInterface;
 
     /**
      * @return string
@@ -108,5 +145,10 @@ abstract class ZipFile
     public function getFingerprint(): string
     {
         return md5($this->getSourcePath() . $this->getZipPath() . $this->getFilesize());
+    }
+
+    public function canDetermineZipDataSize()
+    {
+
     }
 }

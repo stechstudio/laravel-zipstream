@@ -2,10 +2,14 @@
 
 namespace STS\ZipStream;
 
+use function GuzzleHttp\Psr7\stream_for;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use STS\ZipStream\Models\ZipFile;
+use Psr\Http\Message\StreamInterface;
+use STS\ZipStream\Models\File;
 use ZipStream\Bigint;
+use ZipStream\Exception\OverflowException;
 use ZipStream\Option\Method;
 use ZipStream\ZipStream as BaseZipStream;
 use ZipStream\Option\Archive as ArchiveOptions;
@@ -27,6 +31,15 @@ class ZipStream extends BaseZipStream implements Responsable
     /** @var int */
     protected $bytesSent = 0;
 
+    /** @var callable */
+    protected $checkZipSize;
+
+    /** @var StreamInterface */
+    protected $outputStream;
+
+    /** @var StreamInterface */
+    protected $cacheOutputStream;
+
     /**
      * @param ArchiveOptions $archiveOptions
      * @param FileOptions $fileOptions
@@ -43,11 +56,15 @@ class ZipStream extends BaseZipStream implements Responsable
     /**
      * @param string $name
      *
+     * @param array $files
+     *
      * @return ZipStream
      */
-    public function create(string $name)
+    public function create(?string $name = null, array $files = [])
     {
-        return (new self($this->opt, $this->fileOptions))->setName($name);
+        return (new self($this->archiveOptions, $this->fileOptions))
+            ->setName($name)
+            ->add($files);
     }
 
     /**
@@ -63,15 +80,21 @@ class ZipStream extends BaseZipStream implements Responsable
     }
 
     /**
-     * @param ZipFile $file
+     * @param string|array|File $sources
      *
      * @return $this
      */
-    public function add(ZipFile $file)
+    public function add($sources)
     {
+        foreach (Arr::wrap($sources) AS $source) {
+            if (!$source instanceof File) {
+                $source = File::make($source);
+            }
 
-        if (!$this->queue->has($file->getFingerprint())) {
-            $this->queue->put($file->getFingerprint(), $file);
+            // Don't add two files with the same zip path
+            if (!$this->queue->has($source->getZipPath())) {
+                $this->queue->put($source->getZipPath(), $source);
+            }
         }
 
         return $this;
@@ -81,18 +104,37 @@ class ZipStream extends BaseZipStream implements Responsable
      * Builds the zip and writes to output stream
      *
      * @return int
-     * @throws \ZipStream\Exception\OverflowException
+     * @throws OverflowException
      */
     public function process(): int
     {
-        //dd($this->getHeaders());
-        $this->queue->each(function (ZipFile $file) {
-            $this->addFileFromPsr7Stream($file->getZipPath(), $file->getHandle(), $this->fileOptions);
+        $this->queue->each(function (File $file) {
+            $this->addFileFromPsr7Stream($file->getZipPath(), $file->getReadableStream(), $this->fileOptions);
+            $file->getReadableStream()->close();
         });
 
         $this->finish();
+        $this->getOutputStream()->close();
+
+        if($this->cacheOutputStream) {
+            $this->cacheOutputStream->close();
+        }
+
+        if($this->checkZipSize && $this->canPredictZipSize()) {
+            call_user_func($this->checkZipSize, $this->predictZipSize(), $this->getFinalSize(), $this);
+        }
 
         return $this->getFinalSize();
+    }
+
+    /**
+     * @return StreamedResponse
+     */
+    public function response(): StreamedResponse
+    {
+        return new StreamedResponse(function () {
+            $this->process();
+        }, 200, $this->getHeaders());
     }
 
     /**
@@ -102,10 +144,7 @@ class ZipStream extends BaseZipStream implements Responsable
      */
     public function toResponse($request)
     {
-        //dd($this->getHeaders());
-        return new StreamedResponse(function () {
-            $this->process();
-        }, 200, $this->getHeaders());
+        return $this->response();
     }
 
     /**
@@ -119,7 +158,7 @@ class ZipStream extends BaseZipStream implements Responsable
             'Pragma'                    => 'public',
             'Cache-Control'             => 'public, must-revalidate',
             'Content-Transfer-Encoding' => 'binary',
-            //'Content-Length' => $this->canDetermineZipSize() ? $this->determineZipSize() : null
+            'Content-Length' => $this->canPredictZipSize() ? $this->predictZipSize() : null
         ]);
     }
 
@@ -129,7 +168,7 @@ class ZipStream extends BaseZipStream implements Responsable
     public function getName(): string
     {
         // Various different browsers dislike various characters here. Strip them all for safety.
-        $safe_output = trim(str_replace(['"', "'", '\\', ';', "\n", "\r"], '', $this->output_name));
+        $safe_output = trim(str_replace(['"', "'", '\\', ';', "\n", "\r"], '', $this->output_name ?? "download.zip"));
 
         // Check if we need to UTF-8 encode the filename
         return rawurlencode($safe_output);
@@ -144,13 +183,72 @@ class ZipStream extends BaseZipStream implements Responsable
     }
 
     /**
-     * Keep track of how much data we've sent
+     * @param callable $callback
      *
+     * @return $this
+     */
+    public function checkZipSize(callable $callback)
+    {
+        $this->checkZipSize = $callback;
+
+        return $this;
+    }
+
+    /**
+     * @param mixed $output
+     *
+     * @return ZipStream
+     */
+    public function cache($output)
+    {
+        if (!$output instanceof File) {
+            $output = File::make($output);
+        }
+
+        $this->cacheOutputStream = $output->getWritableStream();
+
+        return $this;
+    }
+
+    /**
+     * @return StreamInterface
+     */
+    protected function getOutputStream()
+    {
+        if(!$this->outputStream) {
+            $this->outputStream = stream_for($this->archiveOptions->getOutputStream());
+        }
+
+        return $this->outputStream;
+    }
+
+    /**
+     * @param $output
+     *
+     * @return int
+     * @throws OverflowException
+     */
+    public function saveTo($output): int
+    {
+        if (!$output instanceof File) {
+            $output = File::make($output);
+        }
+
+        $this->outputStream = $output->getWritableStream();
+
+        return $this->process();
+    }
+
+    /**
      * @param string $str
      */
     public function send(string $str): void
     {
-        parent::send($str);
+        $this->getOutputStream()->write($str);
+
+        if($this->cacheOutputStream) {
+            $this->cacheOutputStream->write($str);
+        }
 
         $this->bytesSent += strlen($str);
     }
@@ -158,7 +256,7 @@ class ZipStream extends BaseZipStream implements Responsable
     /**
      * @return bool
      */
-    public function canDetermineZipSize()
+    public function canPredictZipSize()
     {
         return $this->fileOptions->getMethod() == Method::STORE() && !$this->getTotalFilesizes()->isOver32();
     }
@@ -168,9 +266,9 @@ class ZipStream extends BaseZipStream implements Responsable
      *
      * @return int
      */
-    public function determineZipSize(): int
+    public function predictZipSize(): int
     {
-        if (!$this->canDetermineZipSize()) {
+        if (!$this->canPredictZipSize()) {
             throw new \RuntimeException("We can only determine a zip filesize in advance if compression is turned off and filesize is a 32-bit integer");
         }
 
@@ -182,7 +280,7 @@ class ZipStream extends BaseZipStream implements Responsable
      */
     public function getTotalFilesizes(): Bigint
     {
-        return $this->queue->reduce(function (Bigint $bigInt, ZipFile $file) {
+        return $this->queue->reduce(function (Bigint $bigInt, File $file) {
             return $bigInt->add(Bigint::init($file->getFilesize()));
         }, new Bigint());
     }
@@ -192,7 +290,7 @@ class ZipStream extends BaseZipStream implements Responsable
      */
     public function getFilePathLengths(): int
     {
-        return $this->queue->sum(function (ZipFile $file) {
+        return $this->queue->sum(function (File $file) {
             return strlen($file->getZipPath());
         });
     }

@@ -56,13 +56,20 @@ class ZipStreamServiceProvider extends ServiceProvider
         // Automatically apply the package configuration
         $this->mergeConfigFrom(__DIR__.'/../config/config.php', 'zipstream');
 
-        // Register the main class to use with the facade
-        $this->app->singleton('zipstream', function ($app) {
-            return new ZipStream(
-                $this->buildArchiveOptions($app['config']->get('zipstream.archive')),
-                $this->buildFileOptions($app['config']->get('zipstream.file'))
-            );
+        // Register the main class to use with the container binding
+        $this->app->singleton('zipstream', ZipStream::class);
+
+        $this->app->bind(FileOptions::class, function($app) {
+            return $this->buildFileOptions($app['config']->get('zipstream.file'));
         });
+    }
+
+    /**
+     * @return array
+     */
+    public function provides()
+    {
+        return [FileOptions::class, ArchiveOptions::class, 'zipstream'];
     }
 
     /**

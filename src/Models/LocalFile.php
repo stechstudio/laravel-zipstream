@@ -5,7 +5,7 @@ namespace STS\ZipStream\Models;
 use function GuzzleHttp\Psr7\stream_for;
 use Psr\Http\Message\StreamInterface;
 
-class LocalFile extends ZipFile
+class LocalFile extends File
 {
     /**
      * @return int
@@ -18,12 +18,16 @@ class LocalFile extends ZipFile
     /**
      * @return StreamInterface
      */
-    public function getHandle(): StreamInterface
+    protected function buildReadableStream(): StreamInterface
     {
-        if(!$this->handle) {
-            $this->handle = stream_for(fopen($this->getSourcePath(), 'r'));
-        }
+        return stream_for(fopen($this->getSourcePath(), 'r'));
+    }
 
-        return $this->handle;
+    /**
+     * @return StreamInterface
+     */
+    protected function buildWritableStream(): StreamInterface
+    {
+        return stream_for(fopen($this->getSourcePath(), 'w'));
     }
 }
