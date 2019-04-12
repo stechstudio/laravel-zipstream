@@ -7,6 +7,9 @@ use Illuminate\Support\Collection;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Support\Str;
 use STS\ZipStream\Contracts\FileContract;
+use STS\ZipStream\Events\ZipSizePredictionFailed;
+use STS\ZipStream\Events\ZipStreamed;
+use STS\ZipStream\Events\ZipStreaming;
 use STS\ZipStream\Models\File;
 use Psr\Http\Message\StreamInterface;
 use ZipStream\Exception\OverflowException;
@@ -30,14 +33,14 @@ class ZipStream extends BaseZipStream implements Responsable
     /** @var int */
     protected $bytesSent = 0;
 
-    /** @var callable */
-    protected $checkZipSize;
-
     /** @var StreamInterface */
     protected $outputStream;
 
     /** @var StreamInterface */
     protected $cacheOutputStream;
+
+    /** @var array  */
+    protected $meta = [];
 
     /**
      * @param ArchiveOptions $archiveOptions
@@ -107,6 +110,25 @@ class ZipStream extends BaseZipStream implements Responsable
     }
 
     /**
+     * @param array $meta
+     *
+     * @return $this
+     */
+    public function setMeta(array $meta) {
+        $this->meta = $meta;
+
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getMeta(): array
+    {
+        return $this->meta;
+    }
+
+    /**
      * Builds the zip and writes to output stream
      *
      * @return int
@@ -114,6 +136,8 @@ class ZipStream extends BaseZipStream implements Responsable
      */
     public function process(): int
     {
+        event(new ZipStreaming($this));
+
         $this->queue->each(function (File $file) {
             $this->addFileFromPsr7Stream($file->getZipPath(), $file->getReadableStream(), $file->getOptions());
             $file->getReadableStream()->close();
@@ -126,8 +150,10 @@ class ZipStream extends BaseZipStream implements Responsable
             $this->cacheOutputStream->close();
         }
 
-        if ($this->checkZipSize && $this->canPredictZipSize()) {
-            call_user_func($this->checkZipSize, $this->predictZipSize(), $this->getFinalSize(), $this);
+        event(new ZipStreamed($this));
+
+        if($this->canPredictZipSize() && $this->predictedZipSize() != $this->getFinalSize()) {
+            event(new ZipSizePredictionFailed($this, $this->predictedZipSize(), $this->getFinalSize()));
         }
 
         return $this->getFinalSize();
@@ -164,7 +190,7 @@ class ZipStream extends BaseZipStream implements Responsable
             'Pragma'                    => 'public',
             'Cache-Control'             => 'public, must-revalidate',
             'Content-Transfer-Encoding' => 'binary',
-            'Content-Length'            => $this->canPredictZipSize() ? $this->predictZipSize() : null
+            'Content-Length'            => $this->canPredictZipSize() ? $this->predictedZipSize() : null
         ]);
     }
 
@@ -186,18 +212,6 @@ class ZipStream extends BaseZipStream implements Responsable
     public function getFinalSize(): int
     {
         return $this->bytesSent;
-    }
-
-    /**
-     * @param callable $callback
-     *
-     * @return $this
-     */
-    public function checkZipSize(callable $callback)
-    {
-        $this->checkZipSize = $callback;
-
-        return $this;
     }
 
     /**
@@ -272,8 +286,10 @@ class ZipStream extends BaseZipStream implements Responsable
      *
      * @return int
      */
-    public function predictZipSize(): int
+    public function predictedZipSize(): int
     {
-        return $this->queue->sum->predictZipDataSize() + 22;
+        return $this->canPredictZipSize()
+            ? $this->queue->sum->predictZipDataSize() + 22
+            : 0;
     }
 }
