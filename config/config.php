@@ -7,6 +7,8 @@ return [
     // Default options for our archives
     'archive' => [
         'zip64' => env('ZIPSTREAM_ENABLE_ZIP64', true),
+
+        'predict' => env('ZIPSTREAM_PREDICT_SIZE', true)
     ],
 
     // Default options for files added

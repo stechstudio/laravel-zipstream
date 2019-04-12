@@ -97,12 +97,20 @@ ZipStream::create("package.zip")
     ->add(File::make("s3://bucket-name/path/to/object.pdf", "Something.pdf")->setRegion("us-west-2"));
 ```
 
+## Zip size prediction
+
+By default this package attempts to predict the final zip size and sends a `Content-Length` header up front. This means users will see accurate progress on their download, even though the zip is being streamed out as it is created!
+
+This only works if files are not compressed.
+
+If you have issues with the zip size prediction you can disable it with `ZIPSTREAM_PREDICT_SIZE=false` in your .env file.
+
 ## Configure compression
 
 By default this package uses _no_ compression. Why?
 
 1) This makes building the zips super fast, and is light on your CPU
-2) This makes it possible to predict the final zip size so we can send a `Content-Length` header. This means users will see accurate progress on their download, even though the zip is being streamed out as it is created!
+2) This makes it possible to predict the final zip size as mentioned above.
 
 If you want to compress your zip files set `ZIPSTREAM_FILE_METHOD=deflate` in your .env file. Just realize this will disable the `Content-Length` header.
 
@@ -139,6 +147,12 @@ ZipStream::create("package.zip")
 ```
 
 You might use an internal DB id for your cache name, so that the next time a user requests a zip download you can determine if one is already built and just hand it back.
+
+## Events
+
+- `STS\ZipStream\Events\ZipStreaming`: Dispatched when a new zip stream begins processing
+- `STS\ZipStream\Events\ZipStreamed`: Dispatched when a zip finishes streaming
+- `STS\ZipStream\Events\ZipSizePredictionFailed`: Fired if the predicted filesize doesn't match the final size. If you have filesize prediction enabled it's a good idea to listen for this event and log it, since that might mean the zip download failed or was corrupt for your user. 
 
 ## License
 

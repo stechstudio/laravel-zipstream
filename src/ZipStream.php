@@ -39,8 +39,8 @@ class ZipStream extends BaseZipStream implements Responsable
     /** @var StreamInterface */
     protected $cacheOutputStream;
 
-    /** @var array  */
-    protected $meta = [];
+    /** @var Collection  */
+    protected $meta;
 
     /**
      * @param ArchiveOptions $archiveOptions
@@ -115,17 +115,17 @@ class ZipStream extends BaseZipStream implements Responsable
      * @return $this
      */
     public function setMeta(array $meta) {
-        $this->meta = $meta;
+        $this->meta = collect($meta);
 
         return $this;
     }
 
     /**
-     * @return array
+     * @return Collection
      */
-    public function getMeta(): array
+    public function getMeta(): Collection
     {
-        return $this->meta;
+        return $this->meta ?? collect();
     }
 
     /**
@@ -200,10 +200,9 @@ class ZipStream extends BaseZipStream implements Responsable
     public function getName(): string
     {
         // Various different browsers dislike various characters here. Strip them all for safety.
-        $safe_output = trim(str_replace(['"', "'", '\\', ';', "\n", "\r"], '', $this->output_name ?? "download.zip"));
-
-        // Check if we need to UTF-8 encode the filename
-        return rawurlencode($safe_output);
+        return rawurlencode(
+            trim(str_replace(['"', "'", '\\', ';', "\n", "\r"], '', $this->output_name ?? "download.zip"))
+        );
     }
 
     /**
@@ -278,7 +277,9 @@ class ZipStream extends BaseZipStream implements Responsable
      */
     public function canPredictZipSize()
     {
-        return $this->queue->every->canPredictZipDataSize() && $this->queue->sum->getFilesize() < 0xFFFFFFFF;
+        return $this->queue->every->canPredictZipDataSize()
+            && config('zipstream.archive.predict')
+            && $this->queue->sum->getFilesize() < 0xFFFFFFFF;
     }
 
     /**
@@ -291,5 +292,18 @@ class ZipStream extends BaseZipStream implements Responsable
         return $this->canPredictZipSize()
             ? $this->queue->sum->predictZipDataSize() + 22
             : 0;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFingerprint(): string
+    {
+        return md5(
+            // All file fingerprints, sorted and concatenated
+            $this->queue->map->getFingerprint()->sort()->implode()
+            . $this->getName()
+            . serialize($this->getMeta()->sort()->toArray())
+        );
     }
 }
