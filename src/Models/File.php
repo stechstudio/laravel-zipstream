@@ -3,11 +3,12 @@
 namespace STS\ZipStream\Models;
 
 use Illuminate\Support\Str;
+use STS\ZipStream\Contracts\FileContract;
 use ZipStream\Option\Method;
 use ZipStream\Option\File as FileOptions;
 use Psr\Http\Message\StreamInterface;
 
-abstract class File
+abstract class File implements FileContract
 {
     /** @var string */
     protected $sourcePath;

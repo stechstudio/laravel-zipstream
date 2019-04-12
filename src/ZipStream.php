@@ -3,10 +3,10 @@
 namespace STS\ZipStream;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Support\Str;
+use STS\ZipStream\Contracts\FileContract;
 use STS\ZipStream\Models\File;
 use Psr\Http\Message\StreamInterface;
 use ZipStream\Exception\OverflowException;
@@ -87,14 +87,14 @@ class ZipStream extends BaseZipStream implements Responsable
     }
 
     /**
-     * @param string|File $source
+     * @param string|FileContract $source
      * @param string|null $zipPath
      *
      * @return $this
      */
     public function add($source, ?string $zipPath = null)
     {
-        if (!$source instanceof File) {
+        if (!$source instanceof FileContract) {
             $source = File::make($source, $zipPath);
         }
 
@@ -201,13 +201,13 @@ class ZipStream extends BaseZipStream implements Responsable
     }
 
     /**
-     * @param mixed $output
+     * @param string|FileContract $output
      *
      * @return ZipStream
      */
     public function cache($output)
     {
-        if (!$output instanceof File) {
+        if (!$output instanceof FileContract) {
             $output = File::make($output);
         }
 
@@ -229,14 +229,14 @@ class ZipStream extends BaseZipStream implements Responsable
     }
 
     /**
-     * @param $output
+     * @param string|FileContract $output
      *
      * @return int
      * @throws OverflowException
      */
     public function saveTo($output): int
     {
-        if (!$output instanceof File) {
+        if (!$output instanceof FileContract) {
             $output = File::make(Str::finish($output, "/") . $this->getName());
         }
 
