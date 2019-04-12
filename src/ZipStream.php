@@ -2,20 +2,18 @@
 
 namespace STS\ZipStream;
 
-use function GuzzleHttp\Psr7\stream_for;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Psr\Http\Message\StreamInterface;
-use STS\ZipStream\Models\File;
-use ZipStream\Bigint;
-use ZipStream\Exception\OverflowException;
-use ZipStream\Option\Method;
-use ZipStream\ZipStream as BaseZipStream;
-use ZipStream\Option\Archive as ArchiveOptions;
-use ZipStream\Option\File as FileOptions;
 use Illuminate\Contracts\Support\Responsable;
+use STS\ZipStream\Models\File;
+use Psr\Http\Message\StreamInterface;
+use ZipStream\Exception\OverflowException;
+use ZipStream\ZipStream as BaseZipStream;
+use ZipStream\Option\File as FileOptions;
+use ZipStream\Option\Archive as ArchiveOptions;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use function GuzzleHttp\Psr7\stream_for;
 
 class ZipStream extends BaseZipStream implements Responsable
 {
@@ -109,18 +107,18 @@ class ZipStream extends BaseZipStream implements Responsable
     public function process(): int
     {
         $this->queue->each(function (File $file) {
-            $this->addFileFromPsr7Stream($file->getZipPath(), $file->getReadableStream(), $this->fileOptions);
+            $this->addFileFromPsr7Stream($file->getZipPath(), $file->getReadableStream(), $file->getOptions());
             $file->getReadableStream()->close();
         });
 
         $this->finish();
         $this->getOutputStream()->close();
 
-        if($this->cacheOutputStream) {
+        if ($this->cacheOutputStream) {
             $this->cacheOutputStream->close();
         }
 
-        if($this->checkZipSize && $this->canPredictZipSize()) {
+        if ($this->checkZipSize && $this->canPredictZipSize()) {
             call_user_func($this->checkZipSize, $this->predictZipSize(), $this->getFinalSize(), $this);
         }
 
@@ -158,7 +156,7 @@ class ZipStream extends BaseZipStream implements Responsable
             'Pragma'                    => 'public',
             'Cache-Control'             => 'public, must-revalidate',
             'Content-Transfer-Encoding' => 'binary',
-            'Content-Length' => $this->canPredictZipSize() ? $this->predictZipSize() : null
+            'Content-Length'            => $this->canPredictZipSize() ? $this->predictZipSize() : null
         ]);
     }
 
@@ -215,7 +213,7 @@ class ZipStream extends BaseZipStream implements Responsable
      */
     protected function getOutputStream()
     {
-        if(!$this->outputStream) {
+        if (!$this->outputStream) {
             $this->outputStream = stream_for($this->archiveOptions->getOutputStream());
         }
 
@@ -246,7 +244,7 @@ class ZipStream extends BaseZipStream implements Responsable
     {
         $this->getOutputStream()->write($str);
 
-        if($this->cacheOutputStream) {
+        if ($this->cacheOutputStream) {
             $this->cacheOutputStream->write($str);
         }
 
@@ -258,7 +256,7 @@ class ZipStream extends BaseZipStream implements Responsable
      */
     public function canPredictZipSize()
     {
-        return $this->fileOptions->getMethod() == Method::STORE() && !$this->getTotalFilesizes()->isOver32();
+        return $this->queue->every->canPredictZipDataSize() && $this->queue->sum->getFilesize() < 0xFFFFFFFF;
     }
 
     /**
@@ -268,30 +266,6 @@ class ZipStream extends BaseZipStream implements Responsable
      */
     public function predictZipSize(): int
     {
-        if (!$this->canPredictZipSize()) {
-            throw new \RuntimeException("We can only determine a zip filesize in advance if compression is turned off and filesize is a 32-bit integer");
-        }
-
-        return $this->queue->count() * (30 + 46) + (2 * $this->getFilePathLengths()) + $this->getTotalFilesizes()->getValue() + 22;
-    }
-
-    /**
-     * @return Bigint
-     */
-    public function getTotalFilesizes(): Bigint
-    {
-        return $this->queue->reduce(function (Bigint $bigInt, File $file) {
-            return $bigInt->add(Bigint::init($file->getFilesize()));
-        }, new Bigint());
-    }
-
-    /**
-     * @return int
-     */
-    public function getFilePathLengths(): int
-    {
-        return $this->queue->sum(function (File $file) {
-            return strlen($file->getZipPath());
-        });
+        return $this->queue->sum->predictZipDataSize() + 22;
     }
 }

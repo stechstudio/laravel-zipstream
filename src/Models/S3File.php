@@ -36,7 +36,7 @@ class S3File extends File
     /**
      * @return int
      */
-    public function getFilesize(): int
+    public function calculateFilesize(): int
     {
         return $this->getS3Client()->headObject([
             'Bucket' => $this->getParsedPath()['bucket'],

@@ -10,7 +10,7 @@ class LocalFile extends File
     /**
      * @return int
      */
-    public function getFilesize(): int
+    public function calculateFilesize(): int
     {
         return filesize($this->getSourcePath());
     }
