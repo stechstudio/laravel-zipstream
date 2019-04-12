@@ -11,11 +11,12 @@ return [
 
     // Default options for files added
     'file' => [
-        'method' => env('ZIPSTREAM_FILE_METHOD', 'deflate'),
+        'method' => env('ZIPSTREAM_FILE_METHOD', 'store'),
 
         'deflate' => env('ZIPSTREAM_FILE_DEFLATE'),
     ],
 
+    // Override default AWS configs if needed
     'aws' => [
         'region' => env('ZIPSTREAM_AWS_REGION', env('AWS_DEFAULT_REGION', 'us-east-1'))
     ]

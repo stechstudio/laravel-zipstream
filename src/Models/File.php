@@ -46,38 +46,16 @@ abstract class File
     }
 
     /**
-     * @param string $sourcePath
-     * @param string|null $zipPath
-     *
-     * @return LocalFile
-     */
-    public static function fromLocalPath(string $sourcePath, ?string $zipPath = null)
-    {
-        return new LocalFile($sourcePath, $zipPath);
-    }
-
-    /**
-     * @param string $sourcePath
-     * @param string|null $zipPath
-     * @param string|null $region
-     *
-     * @return S3File
-     */
-    public static function fromS3Path(string $sourcePath, ?string $zipPath = null, ?string $region = null)
-    {
-        return new S3File($sourcePath, $zipPath, $region);
-    }
-
-    /**
      * @param string $source
+     * @param string|null $zipPath
      *
      * @return LocalFile|S3File
      */
-    public static function make(string $source)
+    public static function make(string $source, ?string $zipPath = null)
     {
         return Str::startsWith($source, "s3://")
-            ? new S3File($source)
-            : new LocalFile($source);
+            ? new S3File($source, $zipPath)
+            : new LocalFile($source, $zipPath);
     }
 
     /**

@@ -19,18 +19,15 @@ class S3File extends File
     protected $client;
 
     /**
-     * @param string $sourcePath
-     * @param string|null $zipPath
      * @param string $region
+     *
+     * @return $this
      */
-    public function __construct(string $sourcePath, ?string $zipPath = null, ?string $region = "us-east-1")
+    public function setRegion(?string $region = null)
     {
-        parent::__construct($sourcePath, $zipPath);
         $this->region = $region;
 
-        if(!class_exists(S3Client::class, true)) {
-            throw new RuntimeException("You must install the `aws/aws-sdk-php` for S3 file zipping support");
-        }
+        return $this;
     }
 
     /**

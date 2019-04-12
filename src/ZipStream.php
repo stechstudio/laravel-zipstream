@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Contracts\Support\Responsable;
+use Illuminate\Support\Str;
 use STS\ZipStream\Models\File;
 use Psr\Http\Message\StreamInterface;
 use ZipStream\Exception\OverflowException;
@@ -60,9 +61,17 @@ class ZipStream extends BaseZipStream implements Responsable
      */
     public function create(?string $name = null, array $files = [])
     {
-        return (new self($this->archiveOptions, $this->fileOptions))
-            ->setName($name)
-            ->add($files);
+        $zip = (new self($this->archiveOptions, $this->fileOptions))->setName($name);
+
+        foreach($files as $key => $value) {
+            if(is_string($key)) {
+                $zip->add($key, $value);
+            } else {
+                $zip->add($value);
+            }
+        }
+
+        return $zip;
     }
 
     /**
@@ -78,21 +87,20 @@ class ZipStream extends BaseZipStream implements Responsable
     }
 
     /**
-     * @param string|array|File $sources
+     * @param string|File $source
+     * @param string|null $zipPath
      *
      * @return $this
      */
-    public function add($sources)
+    public function add($source, ?string $zipPath = null)
     {
-        foreach (Arr::wrap($sources) AS $source) {
-            if (!$source instanceof File) {
-                $source = File::make($source);
-            }
+        if (!$source instanceof File) {
+            $source = File::make($source, $zipPath);
+        }
 
-            // Don't add two files with the same zip path
-            if (!$this->queue->has($source->getZipPath())) {
-                $this->queue->put($source->getZipPath(), $source);
-            }
+        // Don't add two files with the same zip path
+        if (!$this->queue->has($source->getZipPath())) {
+            $this->queue->put($source->getZipPath(), $source);
         }
 
         return $this;
@@ -229,7 +237,7 @@ class ZipStream extends BaseZipStream implements Responsable
     public function saveTo($output): int
     {
         if (!$output instanceof File) {
-            $output = File::make($output);
+            $output = File::make(Str::finish($output, "/") . $this->getName());
         }
 
         $this->outputStream = $output->getWritableStream();
