@@ -4,18 +4,16 @@ namespace STS\ZipStream\Models;
 
 use Aws;
 use Aws\S3\S3Client;
-use Aws\S3\StreamWrapper;
 use Aws\S3\S3UriParser;
 use function GuzzleHttp\Psr7\stream_for;
 use Psr\Http\Message\StreamInterface;
-use RuntimeException;
 
 class S3File extends File
 {
     /** @var string */
     protected $region;
 
-    /** @var S3Client\ */
+    /** @var S3Client */
     protected $client;
 
     /**

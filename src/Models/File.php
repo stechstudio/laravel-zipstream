@@ -2,11 +2,11 @@
 
 namespace STS\ZipStream\Models;
 
+use Psr\Http\Message\StreamInterface;
 use Illuminate\Support\Str;
 use STS\ZipStream\Contracts\FileContract;
-use ZipStream\Option\Method;
 use ZipStream\Option\File as FileOptions;
-use Psr\Http\Message\StreamInterface;
+use ZipStream\Option\Method;
 
 abstract class File implements FileContract
 {
@@ -37,7 +37,7 @@ abstract class File implements FileContract
     {
         $this->sourcePath = $sourcePath;
 
-        if ($zipPath == null) {
+        if ($zipPath === null) {
             $this->zipPath = basename($sourcePath);
         } else {
             $this->zipPath = $zipPath;
