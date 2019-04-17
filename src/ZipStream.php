@@ -301,7 +301,7 @@ class ZipStream extends BaseZipStream implements Responsable
     {
         return md5(
             // All file fingerprints, sorted and concatenated
-            $this->queue->map->getFingerprint()->sort()->implode()
+            $this->queue->map->getFingerprint()->sort()->implode('')
             . $this->getName()
             . serialize($this->getMeta()->sort()->toArray())
         );

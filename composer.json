@@ -48,7 +48,7 @@
                 "STS\\ZipStream\\ZipStreamServiceProvider"
             ],
             "aliases": {
-                "ZipStream": "STS\\ZipStream\\ZipStreamFacade"
+                "Zip": "STS\\ZipStream\\ZipStreamFacade"
             }
         }
     }
