@@ -34,8 +34,8 @@ class S3File extends File
     public function calculateFilesize(): int
     {
         return $this->getS3Client()->headObject([
-            'Bucket' => $this->getParsedPath()['bucket'],
-            'Key' => $this->getParsedPath()['key']
+            'Bucket' => $this->getBucket(),
+            'Key' => $this->getKey()
         ])->get('ContentLength');
     }
 
@@ -63,11 +63,19 @@ class S3File extends File
     }
 
     /**
-     * @return array
+     * @return string
      */
-    public function getParsedPath(): array
+    public function getBucket(): string
     {
-        return (new S3UriParser())->parse($this->getSourcePath());
+        return parse_url($this->getSourcePath(), PHP_URL_HOST);
+    }
+
+    /**
+     * @return string
+     */
+    public function getKey(): string
+    {
+        return ltrim(parse_url($this->getSourcePath(), PHP_URL_PATH), "/");
     }
 
     /**
@@ -76,8 +84,8 @@ class S3File extends File
     protected function buildReadableStream(): StreamInterface
     {
         return $this->getS3Client()->getObject([
-            'Bucket' => $this->getParsedPath()['bucket'],
-            'Key' => $this->getParsedPath()['key']
+            'Bucket' => $this->getBucket(),
+            'Key' => $this->getKey()
         ])->get('Body');
     }
 
