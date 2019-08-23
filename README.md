@@ -4,17 +4,24 @@
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
 [![Quality Score](https://img.shields.io/scrutinizer/g/stechstudio/laravel-zipstream.svg?style=flat-square)](https://scrutinizer-ci.com/g/stechstudio/laravel-zipstream)
 
-A fast and simple streaming zip file downloader for Laravel. Using this library will save you from having to write the zip to disk. Built on top of the excellent [ZipStream-PHP](https://github.com/maennchen/ZipStream-PHP) library.
+A fast and simple streaming zip file downloader for Laravel. 
+
+- Builds zip files from local or S3 file sources, or any other PSR7 stream.
+- Provides a direct download stream to your user. The zip download beings immediately even though the zip is still being created. No need to save the zip to disk first.
+- Calculates the zip filesize up front for the `Content-Length` header. The user gets an accurate download time estimate in their browser.
+- Built on top of the excellent [ZipStream-PHP](https://github.com/maennchen/ZipStream-PHP) library.
 
 ## Quickstart
 
-1. Install the package
+#### 1. Install the package
 
     ```php
     composer require stechstudio/laravel-zipstream
     ```
+    
+The service provider and facade will be automatically wired up.
 
-2. In a controller method call the `create` method on the `ZipStream` facade, providing a name for your zip and an array of file paths.
+#### 2. In a controller method call the `create` method on the `ZipStream` facade
 
     ```php
     use ZipStream;
@@ -30,7 +37,7 @@ A fast and simple streaming zip file downloader for Laravel. Using this library 
         }
     }
     ```
-That's it! When you return the `ZipStream` from a controller method a `StreamedResponse` will be returned and the zip contents built and streamed out. Your browser will begin downloading a `package.zip` file immediately.
+That's it! A `StreamedResponse` will be returned and the zip contents built and streamed out. The user's browser will begin downloading a `package.zip` file immediately.
 
 ## Customize the internal zip path for a file
 
@@ -70,7 +77,7 @@ ZipStream::create("package.zip")
 
 You can stream files from S3 into your zip. 
 
-1. Install the `aws/aws-sdk-php` package
+1. Install the `aws/aws-sdk-php-laravel` package
 
 2. Setup an AWS IAM user with `s3:GetObject` permission for the S3 bucket and objects you intend to zip up.
 
