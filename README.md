@@ -15,28 +15,29 @@ A fast and simple streaming zip file downloader for Laravel.
 
 #### 1. Install the package
 
-    ```php
-    composer require stechstudio/laravel-zipstream
-    ```
+```php
+composer require stechstudio/laravel-zipstream
+```
     
 The service provider and facade will be automatically wired up.
 
 #### 2. In a controller method call the `create` method on the `ZipStream` facade
 
-    ```php
-    use ZipStream;
-    
-    class ZipController {
- 
-        public function build()
-        {
-            return ZipStream::create("package.zip", [
-                "/path/to/Some File.pdf",
-                "/path/to/Export.xlsx"       
-            ]);
-        }
+```php
+use ZipStream;
+
+class ZipController {
+
+    public function build()
+    {
+        return ZipStream::create("package.zip", [
+            "/path/to/Some File.pdf",
+            "/path/to/Export.xlsx"       
+        ]);
     }
-    ```
+}
+```
+
 That's it! A `StreamedResponse` will be returned and the zip contents built and streamed out. The user's browser will begin downloading a `package.zip` file immediately.
 
 ## Customize the internal zip path for a file
