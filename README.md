@@ -78,7 +78,7 @@ ZipStream::create("package.zip")
 
 You can stream files from S3 into your zip. 
 
-1. Install the `aws/aws-sdk-php-laravel` package
+1. Install the `aws/aws-sdk-php` package
 
 2. Setup an AWS IAM user with `s3:GetObject` permission for the S3 bucket and objects you intend to zip up.
 
