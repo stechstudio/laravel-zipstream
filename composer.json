@@ -17,7 +17,7 @@
     "require": {
         "php": "^7.1",
         "guzzlehttp/guzzle": "^6.0",
-        "illuminate/support": "^5.6",
+        "illuminate/support": "^5.6|^6.0",
         "maennchen/zipstream-php": "^v1.0"
     },
     "require-dev": {
