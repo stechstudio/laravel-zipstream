@@ -24,13 +24,13 @@ The service provider and facade will be automatically wired up.
 #### 2. In a controller method call the `create` method on the `ZipStream` facade
 
 ```php
-use ZipStream;
+use Zip;
 
 class ZipController {
 
     public function build()
     {
-        return ZipStream::create("package.zip", [
+        return Zip::create("package.zip", [
             "/path/to/Some File.pdf",
             "/path/to/Export.xlsx"       
         ]);
@@ -47,7 +47,7 @@ By default any files you add will be stored in the root of the zip, with their o
 You can customize the filename and even create subfolders within the zip by providing your files array with key/value pairs:
 
 ```php
-ZipStream::create("package.zip", [
+Zip::create("package.zip", [
 
     // Will be stored as `Some File.pdf` in the zip
     "/path/to/Some File.pdf",          
@@ -66,7 +66,7 @@ ZipStream::create("package.zip", [
 You can also provide your files one at a time:
 
 ```php
-ZipStream::create("package.zip")
+Zip::create("package.zip")
     ->add("/path/to/Some File.pdf")
     ->add("/path/to/data.xlsx", 'Export.xlsx')
     ->add("/path/to/log.txt", "log/details.txt");
@@ -89,7 +89,7 @@ You can stream files from S3 into your zip.
 Provide `s3://` paths when creating the zip:
 
 ```php
-ZipStream::create("package.zip")
+Zip::create("package.zip")
     ->add("s3://bucket-name/path/to/object.pdf", "Something.pdf");
 ```
 
@@ -98,10 +98,10 @@ ZipStream::create("package.zip")
 If you need to pull files from an S3 region _other_ than what you have specified in `AWS_DEFAULT_REGION` you can make the `File` instance yourself and then set the region name.
 
 ```php
-use ZipStream;
+use Zip;
 use STS\ZipStream\Models\File;
 
-ZipStream::create("package.zip")
+Zip::create("package.zip")
     ->add(File::make("s3://bucket-name/path/to/object.pdf", "Something.pdf")->setRegion("us-west-2"));
 ```
 
@@ -129,7 +129,7 @@ Even though the primary goal of this package is to enable zip downloads without 
 Use the `saveTo` method to write the entire zip to disk immediately. Note that this expects a folder path, the zip name will be appended.
 
 ```php
-ZipStream::create("package.zip")
+Zip::create("package.zip")
     // ... add files ...
     ->saveTo("/path/to/folder");
 ```
@@ -137,7 +137,7 @@ ZipStream::create("package.zip")
 And yes, if you've properly setup and configured S3 you can even save to an S3 bucket/path.
 
 ```php
-ZipStream::create("package.zip")
+Zip::create("package.zip")
     // ... add files ...
     ->saveTo("s3://bucket-name/path/to/folder");
 ```
@@ -149,7 +149,7 @@ What if you have a lot of users requesting the same zip payload? It might be nic
 Use the `cache` method to provide a cache path. Note this should be the entire path including filename.
 
 ```php
-ZipStream::create("package.zip")
+Zip::create("package.zip")
     // ... add files ...
     ->cache("/path/to/folder/some-unique-cache-name.zip");
 ```
