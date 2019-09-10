@@ -21,7 +21,7 @@ composer require stechstudio/laravel-zipstream
     
 The service provider and facade will be automatically wired up.
 
-#### 2. In a controller method call the `create` method on the `ZipStream` facade
+#### 2. In a controller method call the `create` method on the `Zip` facade
 
 ```php
 use Zip;
