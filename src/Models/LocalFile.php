@@ -12,7 +12,7 @@ class LocalFile extends File
      */
     public function calculateFilesize(): int
     {
-        return filesize($this->getSourcePath());
+        return filesize($this->getSource());
     }
 
     /**
@@ -20,7 +20,7 @@ class LocalFile extends File
      */
     protected function buildReadableStream(): StreamInterface
     {
-        return stream_for(fopen($this->getSourcePath(), 'r'));
+        return stream_for(fopen($this->getSource(), 'r'));
     }
 
     /**
@@ -28,6 +28,6 @@ class LocalFile extends File
      */
     protected function buildWritableStream(): StreamInterface
     {
-        return stream_for(fopen($this->getSourcePath(), 'w'));
+        return stream_for(fopen($this->getSource(), 'w'));
     }
 }

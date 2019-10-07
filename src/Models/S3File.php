@@ -71,7 +71,7 @@ class S3File extends File
      */
     public function getBucket(): string
     {
-        return parse_url($this->getSourcePath(), PHP_URL_HOST);
+        return parse_url($this->getSource(), PHP_URL_HOST);
     }
 
     /**
@@ -79,7 +79,7 @@ class S3File extends File
      */
     public function getKey(): string
     {
-        return ltrim(parse_url($this->getSourcePath(), PHP_URL_PATH), "/");
+        return ltrim(parse_url($this->getSource(), PHP_URL_PATH), "/");
     }
 
     /**
@@ -100,6 +100,6 @@ class S3File extends File
     {
         $this->getS3Client()->registerStreamWrapper();
 
-        return stream_for(fopen($this->getSourcePath(), 'w'));
+        return stream_for(fopen($this->getSource(), 'w'));
     }
 }

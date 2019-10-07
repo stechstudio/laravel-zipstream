@@ -11,7 +11,7 @@ use ZipStream\Option\Method;
 abstract class File implements FileContract
 {
     /** @var string */
-    protected $sourcePath;
+    protected $source;
 
     /** @var string */
     protected $zipPath;
@@ -29,20 +29,14 @@ abstract class File implements FileContract
     protected $options;
 
     /**
-     * @param string $sourcePath
+     * @param string $source
      * @param string|null $zipPath
      * @param FileOptions|null $options
      */
-    public function __construct(string $sourcePath, ?string $zipPath = null, ?FileOptions $options = null)
+    public function __construct(string $source, ?string $zipPath = null, ?FileOptions $options = null)
     {
-        $this->sourcePath = $sourcePath;
-
-        if ($zipPath === null) {
-            $this->zipPath = basename($sourcePath);
-        } else {
-            $this->zipPath = $zipPath;
-        }
-
+        $this->source = $source;
+        $this->zipPath = $zipPath ?? $this->getDefaultZipPath();
         $this->options = $options ?? resolve(FileOptions::class);
     }
 
@@ -54,9 +48,15 @@ abstract class File implements FileContract
      */
     public static function make(string $source, ?string $zipPath = null)
     {
-        return Str::startsWith($source, "s3://")
-            ? new S3File($source, $zipPath)
-            : new LocalFile($source, $zipPath);
+        if(Str::startsWith($source, "s3://")) {
+            return new S3File($source, $zipPath);
+        }
+
+        if(file_exists($source)) {
+            return new LocalFile($source, $zipPath);
+        }
+
+        return new TempFile($source, $zipPath);
     }
 
     /**
@@ -70,9 +70,17 @@ abstract class File implements FileContract
     /**
      * @return string
      */
-    public function getSourcePath(): string
+    public function getSource(): string
     {
-        return $this->sourcePath;
+        return $this->source;
+    }
+
+    /**
+     * @return string
+     */
+    protected function getDefaultZipPath()
+    {
+        return basename($this->getSource());
     }
 
     /**
@@ -145,7 +153,7 @@ abstract class File implements FileContract
      */
     public function getFingerprint(): string
     {
-        return md5($this->getSourcePath() . $this->getZipPath() . $this->getFilesize());
+        return md5($this->getSource() . $this->getZipPath() . $this->getFilesize());
     }
 
     /**
