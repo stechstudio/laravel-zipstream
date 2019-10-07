@@ -72,6 +72,15 @@ Zip::create("package.zip")
     ->add("/path/to/log.txt", "log/details.txt");
 ```
 
+## Add raw file data
+
+You can provide raw data instead of a filepath:
+
+```php
+Zip::create("package.zip")
+    ->add("...file contents...", "hello.txt");
+```
+
 ## Support for S3
 
 ### Install AWS sdk and configure S3
