@@ -12,6 +12,7 @@ use STS\ZipStream\Events\ZipStreamed;
 use STS\ZipStream\Events\ZipStreaming;
 use STS\ZipStream\Models\File;
 use Psr\Http\Message\StreamInterface;
+use STS\ZipStream\Models\TempFile;
 use ZipStream\Exception\OverflowException;
 use ZipStream\ZipStream as BaseZipStream;
 use ZipStream\Option\File as FileOptions;
@@ -104,6 +105,25 @@ class ZipStream extends BaseZipStream implements Responsable
         // Don't add two files with the same zip path
         if (!$this->queue->has($source->getZipPath())) {
             $this->queue->put($source->getZipPath(), $source);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Explicitly add raw content instead of from file on disk
+     *
+     * @param $content
+     * @param string $zipPath
+     *
+     * @return $this
+     */
+    public function addRaw($content, string $zipPath)
+    {
+        $file = new TempFile($content, $zipPath);
+
+        if (!$this->queue->has($file->getZipPath())) {
+            $this->queue->put($file->getZipPath(), $file);
         }
 
         return $this;

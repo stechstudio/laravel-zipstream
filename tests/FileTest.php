@@ -14,6 +14,7 @@ class FileTest extends TestCase
     {
         $this->assertInstanceOf(S3File::class, File::make('s3://bucket/key'));
         $this->assertInstanceOf(LocalFile::class, File::make('/dev/null'));
+        $this->assertInstanceOf(LocalFile::class, File::make('/tmp/foobar'));
         $this->assertInstanceOf(TempFile::class, File::make("raw contents", "filename.txt"));
     }
 
