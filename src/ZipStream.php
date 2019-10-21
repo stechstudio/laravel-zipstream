@@ -309,9 +309,17 @@ class ZipStream extends BaseZipStream implements Responsable
      */
     public function predictedZipSize(): int
     {
-        return $this->canPredictZipSize()
-            ? $this->queue->sum->predictZipDataSize() + 22
-            : 0;
+        if(!$this->canPredictZipSize()) {
+            return 0;
+        }
+        $commentLength = strlen($this->opt->getComment());
+        $size = $this->queue->sum->predictZipDataSize($this->opt);
+
+        // end of central directory record
+        // 4 + 2 + 2 + 2 + 2 + 4 + 4 + 2 + comment
+        $size += 22 + $commentLength;
+
+        return $size;
     }
 
     /**
