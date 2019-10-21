@@ -3,6 +3,7 @@
 namespace STS\ZipStream\Contracts;
 
 use Psr\Http\Message\StreamInterface;
+use ZipStream\Option\Archive as ArchiveOptions;
 use ZipStream\Option\File as FileOptions;
 
 interface FileContract
@@ -19,7 +20,7 @@ interface FileContract
 
     public function getOptions(): FileOptions;
 
-    public function predictZipDataSize(): int;
+    public function predictZipDataSize(ArchiveOptions $options): int;
 
     public function getReadableStream(): StreamInterface;
 
