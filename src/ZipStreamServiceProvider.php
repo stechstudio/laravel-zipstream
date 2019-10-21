@@ -56,6 +56,7 @@ class ZipStreamServiceProvider extends ServiceProvider
     {
         return tap(new ArchiveOptions(), function(ArchiveOptions $options) use($config) {
             $options->setEnableZip64($config['zip64']);
+            $options->setZeroHeader(true);
         });
     }
 
