@@ -67,8 +67,8 @@ class ZipStream extends BaseZipStream implements Responsable
     {
         $zip = (new self($this->archiveOptions, $this->fileOptions))->setName($name);
 
-        foreach($files as $key => $value) {
-            if(is_string($key)) {
+        foreach ($files as $key => $value) {
+            if (is_string($key)) {
                 $zip->add($key, $value);
             } else {
                 $zip->add($value);
@@ -134,7 +134,8 @@ class ZipStream extends BaseZipStream implements Responsable
      *
      * @return $this
      */
-    public function setMeta(array $meta) {
+    public function setMeta(array $meta)
+    {
         $this->meta = collect($meta);
 
         return $this;
@@ -163,6 +164,11 @@ class ZipStream extends BaseZipStream implements Responsable
             $file->getReadableStream()->close();
         });
 
+        $estimation = false;
+        if ($this->canPredictZipSize()) {
+            $estimation = $this->predictedZipSize();
+        }
+
         $this->finish();
         $this->getOutputStream()->close();
 
@@ -172,8 +178,8 @@ class ZipStream extends BaseZipStream implements Responsable
 
         event(new ZipStreamed($this));
 
-        if($this->canPredictZipSize() && $this->predictedZipSize() != $this->getFinalSize()) {
-            event(new ZipSizePredictionFailed($this, $this->predictedZipSize(), $this->getFinalSize()));
+        if ($estimation && $estimation != $this->getFinalSize()) {
+            event(new ZipSizePredictionFailed($this, $estimation, $this->getFinalSize()));
         }
 
         return $this->getFinalSize();
@@ -309,9 +315,17 @@ class ZipStream extends BaseZipStream implements Responsable
      */
     public function predictedZipSize(): int
     {
-        return $this->canPredictZipSize()
-            ? $this->queue->sum->predictZipDataSize() + 22
-            : 0;
+        if (!$this->canPredictZipSize()) {
+            return 0;
+        }
+        $commentLength = strlen($this->opt->getComment());
+        $size = $this->queue->sum->predictZipDataSize($this->opt);
+
+        // end of central directory record
+        // 4 + 2 + 2 + 2 + 2 + 4 + 4 + 2 + comment
+        $size += 22 + $commentLength;
+
+        return $size;
     }
 
     /**

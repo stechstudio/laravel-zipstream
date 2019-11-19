@@ -5,6 +5,7 @@ namespace STS\ZipStream\Models;
 use Psr\Http\Message\StreamInterface;
 use Illuminate\Support\Str;
 use STS\ZipStream\Contracts\FileContract;
+use ZipStream\Option\Archive as ArchiveOptions;
 use ZipStream\Option\File as FileOptions;
 use ZipStream\Option\Method;
 
@@ -177,8 +178,38 @@ abstract class File implements FileContract
      *
      * @return int
      */
-    public function predictZipDataSize(): int
+    public function predictZipDataSize(ArchiveOptions $options): int
     {
-        return 30 + 46 + (2 * strlen($this->getZipPath())) + $this->getFilesize();
+        $nameLength = strlen($this->getZipPath());
+        $extraLength = 0;
+        if ($options->isZeroHeader() && $options->isEnableZip64()) {
+            // 2 + 2 + 8 + 8
+            $extraLength += 20;
+        }
+        $commentLength = strlen($this->getOptions()->getComment());
+
+        // Local file header
+        // 4 + 2 + 2 + 2 + 2 + 2 + 4 + 4 + 4 + 2 + 2 + name + extra
+        $size = 30 + $nameLength + $extraLength;
+
+        // File header in central directory structure
+        // 4 + 2 + 2 + 2 + 2 + 2 + 2 + 4 + 4 + 4 + 2 + 2 + 2 + 2 + 2 + 4 + 4 + name + extra + comment
+        $extraLength = 0;
+        $size += 46 + $nameLength + $extraLength + $commentLength;
+
+        // File data
+        $size += $this->getFilesize();
+
+        if ($options->isZeroHeader()) {
+            // Add data descriptor
+            if (!$options->isEnableZip64()) {
+                // 4 + 4 + 4 + 4
+                $size += 16;
+            } else {
+                // 4 + 4 + 8 + 8
+                $size += 24;
+            }
+        }
+        return $size;
     }
 }
