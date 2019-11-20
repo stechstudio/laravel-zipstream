@@ -73,13 +73,22 @@ Zip::create("package.zip")
     ->add("/path/to/log.txt", "log/details.txt");
 ```
 
+## Add HTTP file sources
+
+You can add HTTP URLs as the source filepath. Note that zip filesize can only be calculated up front if the HTTP source provides a `Content-Length` header, not all URLs do. 
+
+```php
+Zip::create("package.zip")
+    ->add("https://...", "myfile.pdf");
+```
+
 ## Add raw file data
 
 You can provide raw data instead of a filepath:
 
 ```php
 Zip::create("package.zip")
-    ->add("...file contents...", "hello.txt");
+    ->addRaw("...file contents...", "hello.txt");
 ```
 
 ## Support for S3
