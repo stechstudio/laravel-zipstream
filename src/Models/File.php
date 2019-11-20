@@ -174,7 +174,7 @@ abstract class File implements FileContract
      */
     public function canPredictZipDataSize(): bool
     {
-        return $this->options->getMethod() == Method::STORE() && $this->getFilesize() < 0xFFFFFFFF;
+        return $this->options->getMethod() == Method::STORE();
     }
 
     /**

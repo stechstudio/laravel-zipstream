@@ -304,8 +304,7 @@ class ZipStream extends BaseZipStream implements Responsable
     public function canPredictZipSize()
     {
         return $this->queue->every->canPredictZipDataSize()
-            && config('zipstream.archive.predict')
-            && $this->queue->sum->getFilesize() < 0xFFFFFFFF;
+            && config('zipstream.archive.predict');
     }
 
     /**
