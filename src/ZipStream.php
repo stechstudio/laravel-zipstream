@@ -40,7 +40,7 @@ class ZipStream extends BaseZipStream implements Responsable
     /** @var StreamInterface */
     protected $cacheOutputStream;
 
-    /** @var Collection  */
+    /** @var Collection */
     protected $meta;
 
     /**
@@ -321,10 +321,10 @@ class ZipStream extends BaseZipStream implements Responsable
         $size = $this->queue->sum->predictZipDataSize($this->opt);
 
         // ZIP64 has an additional directory entry
-        if($size >= 0xFFFFFFFF) {
+        if ($size >= 0xFFFFFFFF) {
             $size += 96;
 
-            if(!$this->opt->isZeroHeader()) {
+            if (!$this->opt->isZeroHeader()) {
                 $size += 20;
             }
         }
@@ -342,7 +342,6 @@ class ZipStream extends BaseZipStream implements Responsable
     public function getFingerprint(): string
     {
         return md5(
-        // All file fingerprints, sorted and concatenated
             $this->queue->map->getFingerprint()->sort()->implode('')
             . $this->getName()
             . serialize($this->getMeta()->sort()->toArray())

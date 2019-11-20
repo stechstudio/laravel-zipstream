@@ -18,6 +18,7 @@ class HttpFile extends File
     public function calculateFilesize(): int
     {
         $headers = $this->getHeaders();
+
         return $headers[self::HEADER_CONTENT_LENGTH];
     }
 
@@ -46,7 +47,7 @@ class HttpFile extends File
         return array_key_exists(self::HEADER_CONTENT_LENGTH, $this->getHeaders()) &&
             parent::canPredictZipDataSize();
     }
-    
+
     /**
      * @return array
      */
@@ -55,6 +56,7 @@ class HttpFile extends File
         if (!$this->headers) {
             $this->headers = array_change_key_case(get_headers($this->getSource(), 1));
         }
+
         return $this->headers;
     }
 }
