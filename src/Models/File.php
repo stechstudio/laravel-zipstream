@@ -49,11 +49,11 @@ abstract class File implements FileContract
      */
     public static function make(string $source, ?string $zipPath = null)
     {
-        if(Str::startsWith($source, "s3://")) {
+        if (Str::startsWith($source, "s3://")) {
             return new S3File($source, $zipPath);
         }
 
-        if(Str::startsWith($source, "/")) {
+        if (Str::startsWith($source, "/")) {
             return new LocalFile($source, $zipPath);
         }
 
@@ -107,7 +107,7 @@ abstract class File implements FileContract
      */
     public function getReadableStream(): StreamInterface
     {
-        if(!$this->readStream) {
+        if (!$this->readStream) {
             $this->readStream = $this->buildReadableStream();
         }
 
@@ -119,7 +119,7 @@ abstract class File implements FileContract
      */
     public function getWritableStream(): StreamInterface
     {
-        if(!$this->writeStream) {
+        if (!$this->writeStream) {
             $this->writeStream = $this->buildWritableStream();
         }
 
@@ -141,7 +141,7 @@ abstract class File implements FileContract
      */
     public function getFilesize(): int
     {
-        if(!$this->filesize) {
+        if (!$this->filesize) {
             $this->filesize = $this->calculateFilesize();
         }
 
@@ -174,7 +174,7 @@ abstract class File implements FileContract
      */
     public function canPredictZipDataSize(): bool
     {
-        return $this->options->getMethod() == Method::STORE() && $this->getFilesize() < 0xFFFFFFFF;
+        return $this->options->getMethod() == Method::STORE();
     }
 
     /**
@@ -214,6 +214,7 @@ abstract class File implements FileContract
                 $size += 24;
             }
         }
+
         return $size;
     }
 }
