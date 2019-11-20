@@ -57,6 +57,10 @@ abstract class File implements FileContract
             return new LocalFile($source, $zipPath);
         }
 
+        if (Str::startsWith($source, "http") && filter_var($source, FILTER_VALIDATE_URL)) {
+            return new HttpFile($source, $zipPath);
+        }
+
         return new TempFile($source, $zipPath);
     }
 
