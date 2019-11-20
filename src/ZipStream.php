@@ -166,7 +166,7 @@ class ZipStream extends BaseZipStream implements Responsable
 
         $estimation = false;
         if ($this->canPredictZipSize()) {
-            $estimation = $this->predictedZipSize();
+            $estimation = $this->predictZipSize();
         }
 
         $this->finish();
@@ -216,7 +216,7 @@ class ZipStream extends BaseZipStream implements Responsable
             'Pragma'                    => 'public',
             'Cache-Control'             => 'public, must-revalidate',
             'Content-Transfer-Encoding' => 'binary',
-            'Content-Length'            => $this->canPredictZipSize() ? $this->predictedZipSize() : null
+            'Content-Length'            => $this->canPredictZipSize() ? $this->predictZipSize() : null
         ]);
     }
 
@@ -312,13 +312,22 @@ class ZipStream extends BaseZipStream implements Responsable
      *
      * @return int
      */
-    public function predictedZipSize(): int
+    public function predictZipSize(): int
     {
         if (!$this->canPredictZipSize()) {
             return 0;
         }
         $commentLength = strlen($this->opt->getComment());
         $size = $this->queue->sum->predictZipDataSize($this->opt);
+
+        // ZIP64 has an additional directory entry
+        if($size >= 0xFFFFFFFF) {
+            $size += 96;
+
+            if(!$this->opt->isZeroHeader()) {
+                $size += 20;
+            }
+        }
 
         // end of central directory record
         // 4 + 2 + 2 + 2 + 2 + 4 + 4 + 2 + comment
@@ -333,7 +342,7 @@ class ZipStream extends BaseZipStream implements Responsable
     public function getFingerprint(): string
     {
         return md5(
-            // All file fingerprints, sorted and concatenated
+        // All file fingerprints, sorted and concatenated
             $this->queue->map->getFingerprint()->sort()->implode('')
             . $this->getName()
             . serialize($this->getMeta()->sort()->toArray())

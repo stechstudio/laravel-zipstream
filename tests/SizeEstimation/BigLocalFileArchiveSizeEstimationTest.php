@@ -25,4 +25,13 @@ class BigLocalFileArchiveSizeEstimationTest extends SingleFileArchiveSizeEstimat
     {
         return new LocalFile(self::TEST_FILE_PATH, $zipPath);
     }
+
+    public function provideSupportedEnableZip64Options()
+    {
+        return [
+            [
+                true,
+            ]
+        ];
+    }
 }

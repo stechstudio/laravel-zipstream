@@ -46,7 +46,7 @@ class SizeEstimationTestCase extends TestCase
 
     public function assertSizeEstimation()
     {
-        $estimate = $this->zip->predictedZipSize();
+        $estimate = $this->zip->predictZipDataSize();
 
         $this->zip->saveTo("/tmp");
 
