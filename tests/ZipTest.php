@@ -30,10 +30,11 @@ class ZipTest extends TestCase
 
         /** @var ZipStream $zip */
         $zip = Zip::create("my.zip", ["/tmp/test1.txt", "/tmp/test2.txt"]);
+        $sizePrediction = $zip->predictedZipSize();
         $zip->saveTo("/tmp");
 
         $this->assertTrue(file_exists("/tmp/my.zip"));
-        $this->assertEquals($zip->predictedZipSize(), filesize("/tmp/my.zip"));
+        $this->assertEquals($sizePrediction, filesize("/tmp/my.zip"));
 
         $z = zip_open("/tmp/my.zip");
         $this->assertEquals("this is the first test file for test run $testrun", zip_entry_read(zip_read($z)));
