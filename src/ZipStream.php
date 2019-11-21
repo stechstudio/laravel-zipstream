@@ -43,11 +43,17 @@ class ZipStream extends BaseZipStream implements Responsable
     /** @var Collection */
     protected $meta;
 
+    /** @var bool */
+    protected $calculateOnly = false;
+
+    /** @var int */
+    protected $predictedSize = 0;
+
     /**
      * @param ArchiveOptions $archiveOptions
-     * @param FileOptions $fileOptions
+     * @param FileOptions    $fileOptions
      */
-    public function __construct(ArchiveOptions $archiveOptions, FileOptions $fileOptions)
+    public function __construct( ArchiveOptions $archiveOptions, FileOptions $fileOptions )
     {
         parent::__construct(null, $archiveOptions);
 
@@ -59,11 +65,11 @@ class ZipStream extends BaseZipStream implements Responsable
     /**
      * @param string $name
      *
-     * @param array $files
+     * @param array  $files
      *
      * @return ZipStream
      */
-    public function create(?string $name = null, array $files = [])
+    public function create( ?string $name = null, array $files = [] )
     {
         $zip = (new self($this->archiveOptions, $this->fileOptions))->setName($name);
 
@@ -83,7 +89,7 @@ class ZipStream extends BaseZipStream implements Responsable
      *
      * @return $this
      */
-    public function setName(string $name)
+    public function setName( string $name )
     {
         $this->output_name = $name;
 
@@ -92,11 +98,11 @@ class ZipStream extends BaseZipStream implements Responsable
 
     /**
      * @param string|FileContract $source
-     * @param string|null $zipPath
+     * @param string|null         $zipPath
      *
      * @return $this
      */
-    public function add($source, ?string $zipPath = null)
+    public function add( $source, ?string $zipPath = null )
     {
         if (!$source instanceof FileContract) {
             $source = File::make($source, $zipPath);
@@ -107,26 +113,22 @@ class ZipStream extends BaseZipStream implements Responsable
             $this->queue->put($source->getZipPath(), $source);
         }
 
+        $this->predictedSize = 0;
+
         return $this;
     }
 
     /**
      * Explicitly add raw content instead of from file on disk
      *
-     * @param $content
+     * @param        $content
      * @param string $zipPath
      *
      * @return $this
      */
-    public function addRaw($content, string $zipPath)
+    public function addRaw( $content, string $zipPath )
     {
-        $file = new TempFile($content, $zipPath);
-
-        if (!$this->queue->has($file->getZipPath())) {
-            $this->queue->put($file->getZipPath(), $file);
-        }
-
-        return $this;
+        return $this->add(new TempFile($content, $zipPath));
     }
 
     /**
@@ -134,7 +136,7 @@ class ZipStream extends BaseZipStream implements Responsable
      *
      * @return $this
      */
-    public function setMeta(array $meta)
+    public function setMeta( array $meta )
     {
         $this->meta = collect($meta);
 
@@ -157,17 +159,15 @@ class ZipStream extends BaseZipStream implements Responsable
      */
     public function process(): int
     {
+        $this->bytesSent = 0;
+
         event(new ZipStreaming($this));
 
-        $this->queue->each(function (File $file) {
-            $this->addFileFromPsr7Stream($file->getZipPath(), $file->getReadableStream(), $file->getOptions());
-            $file->getReadableStream()->close();
-        });
+        $this->queue->map->toZipStreamFile($this)->each->process();
 
-        $estimation = false;
-        if ($this->canPredictZipSize()) {
-            $estimation = $this->predictZipSize();
-        }
+        $predicted = $this->canPredictZipSize()
+            ? $this->predictZipSize()
+            : false;
 
         $this->finish();
         $this->getOutputStream()->close();
@@ -178,8 +178,8 @@ class ZipStream extends BaseZipStream implements Responsable
 
         event(new ZipStreamed($this));
 
-        if ($estimation && $estimation != $this->getFinalSize()) {
-            event(new ZipSizePredictionFailed($this, $estimation, $this->getFinalSize()));
+        if ($predicted && $predicted != $this->getFinalSize()) {
+            event(new ZipSizePredictionFailed($this, $predicted, $this->getFinalSize()));
         }
 
         return $this->getFinalSize();
@@ -200,7 +200,7 @@ class ZipStream extends BaseZipStream implements Responsable
      *
      * @return StreamedResponse
      */
-    public function toResponse($request)
+    public function toResponse( $request )
     {
         return $this->response();
     }
@@ -244,7 +244,7 @@ class ZipStream extends BaseZipStream implements Responsable
      *
      * @return ZipStream
      */
-    public function cache($output)
+    public function cache( $output )
     {
         if (!$output instanceof FileContract) {
             $output = File::make($output);
@@ -273,7 +273,7 @@ class ZipStream extends BaseZipStream implements Responsable
      * @return int
      * @throws OverflowException
      */
-    public function saveTo($output): int
+    public function saveTo( $output ): int
     {
         if (!$output instanceof FileContract) {
             $output = File::make(Str::finish($output, "/") . $this->getName());
@@ -287,15 +287,19 @@ class ZipStream extends BaseZipStream implements Responsable
     /**
      * @param string $str
      */
-    public function send(string $str): void
+    public function send( string $str ): void
     {
+        $this->bytesSent += strlen($str);
+
+        if ($this->calculateOnly) {
+            return;
+        }
+
         $this->getOutputStream()->write($str);
 
         if ($this->cacheOutputStream) {
             $this->cacheOutputStream->write($str);
         }
-
-        $this->bytesSent += strlen($str);
     }
 
     /**
@@ -308,8 +312,6 @@ class ZipStream extends BaseZipStream implements Responsable
     }
 
     /**
-     * Stack Overflow FTW! http://stackoverflow.com/a/19380600/660694
-     *
      * @return int
      */
     public function predictZipSize(): int
@@ -317,23 +319,22 @@ class ZipStream extends BaseZipStream implements Responsable
         if (!$this->canPredictZipSize()) {
             return 0;
         }
-        $commentLength = strlen($this->opt->getComment());
-        $size = $this->queue->sum->predictZipDataSize($this->opt);
 
-        // ZIP64 has an additional directory entry
-        if ($size >= 0xFFFFFFFF) {
-            $size += 96;
-
-            if (!$this->opt->isZeroHeader()) {
-                $size += 20;
-            }
+        if ($this->predictedSize > 0) {
+            return $this->predictedSize;
         }
 
-        // end of central directory record
-        // 4 + 2 + 2 + 2 + 2 + 4 + 4 + 2 + comment
-        $size += 22 + $commentLength;
+        $this->bytesSent = 0;
+        $this->calculateOnly = true;
 
-        return $size;
+        $this->queue->map->toZipStreamFile($this)->each->calculate();
+        $this->finish();
+
+        $this->predictedSize = $this->queue->sum->getFilesize() + $this->getFinalSize();
+
+        $this->calculateOnly = false;
+
+        return $this->predictedSize;
     }
 
     /**
@@ -346,5 +347,15 @@ class ZipStream extends BaseZipStream implements Responsable
             . $this->getName()
             . serialize($this->getMeta()->sort()->toArray())
         );
+    }
+
+    /**
+     *
+     */
+    protected function clear(): void
+    {
+        parent::clear();
+
+        $this->opt = $this->archiveOptions;
     }
 }

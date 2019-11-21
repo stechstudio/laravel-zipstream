@@ -20,8 +20,6 @@ interface FileContract
 
     public function getOptions(): FileOptions;
 
-    public function predictZipDataSize(ArchiveOptions $options): int;
-
     public function getReadableStream(): StreamInterface;
 
     public function getWritableStream(): StreamInterface;
