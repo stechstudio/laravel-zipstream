@@ -48,9 +48,10 @@ class ZipTest extends TestCase
         file_put_contents("/tmp/test1.txt", "this is the first test file for test run $testrun");
         file_put_contents("/tmp/test2.txt", "this is the second test file for test run $testrun");
         exec('dd if=/dev/zero count=5120 bs=1048576 >/tmp/bigfile.txt');
+        exec('dd if=/dev/zero count=1024 bs=1048576 >/tmp/medfile.txt');
 
         /** @var ZipStream $zip */
-        $zip = Zip::create("my.zip", ["/tmp/test1.txt", "/tmp/test2.txt", "/tmp/bigfile.txt"]);
+        $zip = Zip::create("my.zip", ["/tmp/test1.txt", "/tmp/test2.txt", "/tmp/bigfile.txt", "/tmp/medfile.txt"]);
         $sizePrediction = $zip->predictZipSize();
         $zip->saveTo("/tmp");
 
