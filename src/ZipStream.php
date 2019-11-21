@@ -47,9 +47,6 @@ class ZipStream extends BaseZipStream implements Responsable
     protected $calculateOnly = false;
 
     /** @var int */
-    protected $calculated = 0;
-
-    /** @var int */
     protected $predictedSize = 0;
 
     /**
@@ -116,7 +113,7 @@ class ZipStream extends BaseZipStream implements Responsable
             $this->queue->put($source->getZipPath(), $source);
         }
 
-        $this->clear();
+        $this->predictedSize = 0;
 
         return $this;
     }
@@ -162,6 +159,8 @@ class ZipStream extends BaseZipStream implements Responsable
      */
     public function process(): int
     {
+        $this->bytesSent = 0;
+
         event(new ZipStreaming($this));
 
         $this->queue->map->toZipStreamFile($this)->each->process();
@@ -290,9 +289,9 @@ class ZipStream extends BaseZipStream implements Responsable
      */
     public function send( string $str ): void
     {
-        if ($this->calculateOnly) {
-            $this->calculated += strlen($str);
+        $this->bytesSent += strlen($str);
 
+        if ($this->calculateOnly) {
             return;
         }
 
@@ -301,8 +300,6 @@ class ZipStream extends BaseZipStream implements Responsable
         if ($this->cacheOutputStream) {
             $this->cacheOutputStream->write($str);
         }
-
-        $this->bytesSent += strlen($str);
     }
 
     /**
@@ -327,13 +324,13 @@ class ZipStream extends BaseZipStream implements Responsable
             return $this->predictedSize;
         }
 
-        $this->calculated = 0;
+        $this->bytesSent = 0;
         $this->calculateOnly = true;
 
         $this->queue->map->toZipStreamFile($this)->each->calculate();
         $this->finish();
 
-        $this->predictedSize = $this->queue->sum->getFilesize() + $this->calculated;
+        $this->predictedSize = $this->queue->sum->getFilesize() + $this->getFinalSize();
 
         $this->calculateOnly = false;
 
@@ -359,7 +356,6 @@ class ZipStream extends BaseZipStream implements Responsable
     {
         parent::clear();
 
-        $this->predictedSize = 0;
         $this->opt = $this->archiveOptions;
     }
 }
