@@ -160,15 +160,15 @@ class ZipStream extends BaseZipStream implements Responsable
     public function process(): int
     {
         $this->bytesSent = 0;
+        $this->configureZip64();
 
         event(new ZipStreaming($this));
-
-        $this->queue->map->toZipStreamFile($this)->each->process();
 
         $predicted = $this->canPredictZipSize()
             ? $this->predictZipSize()
             : false;
 
+        $this->queue->map->toZipStreamFile($this)->each->process();
         $this->finish();
         $this->getOutputStream()->close();
 
@@ -178,11 +178,21 @@ class ZipStream extends BaseZipStream implements Responsable
 
         event(new ZipStreamed($this));
 
-        if ($predicted && $predicted != $this->getFinalSize()) {
+        if ($predicted !== false && $predicted != $this->getFinalSize()) {
             event(new ZipSizePredictionFailed($this, $predicted, $this->getFinalSize()));
         }
 
         return $this->getFinalSize();
+    }
+
+    public function configureZip64()
+    {
+        $this->opt->setEnableZip64(
+            // More than 65535 files
+            count($this->files) > 0xFFFF
+            // Filesize over max 32 bit integer
+            || $this->queue->sum->getFilesize() > 0xFFFFFFFF
+        );
     }
 
     /**
@@ -324,17 +334,33 @@ class ZipStream extends BaseZipStream implements Responsable
             return $this->predictedSize;
         }
 
+        $this->configureZip64();
+        $this->predictedSize = $this->calculateZipSize();
+
+        // It's conceivable that we didn't need Zip64 until the zip headers/decriptors were added.
+        // If so, turn on Zip64 and calculate again.
+        if(!$this->opt->isEnableZip64() && $this->predictedSize > 0xFFFFFFFF) {
+            $this->opt->setEnableZip64(true);
+            $this->predictedSize = $this->calculateZipSize();
+        }
+
+        return $this->predictedSize;
+    }
+
+    /**
+     * @return int
+     */
+    protected function calculateZipSize(): int
+    {
         $this->bytesSent = 0;
         $this->calculateOnly = true;
 
         $this->queue->map->toZipStreamFile($this)->each->calculate();
         $this->finish();
 
-        $this->predictedSize = $this->queue->sum->getFilesize() + $this->getFinalSize();
-
         $this->calculateOnly = false;
 
-        return $this->predictedSize;
+        return $this->queue->sum->getFilesize() + $this->getFinalSize();
     }
 
     /**
