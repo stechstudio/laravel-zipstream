@@ -8,7 +8,7 @@
 A fast and simple streaming zip file downloader for Laravel. 
 
 - Builds zip files from local or S3 file sources, or any other PSR7 stream.
-- Provides a direct download stream to your user. The zip download beings immediately even though the zip is still being created. No need to save the zip to disk first.
+- Provides a direct download stream to your user. The zip download begins immediately even though the zip is still being created. No need to save the zip to disk first.
 - Calculates the zip filesize up front for the `Content-Length` header. The user gets an accurate download time estimate in their browser.
 - Built on top of the excellent [ZipStream-PHP](https://github.com/maennchen/ZipStream-PHP) library.
 
