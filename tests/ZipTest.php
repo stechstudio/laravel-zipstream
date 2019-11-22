@@ -29,17 +29,18 @@ class ZipTest extends TestCase
         file_put_contents("/tmp/test2.txt", "this is the second test file for test run $testrun");
 
         /** @var ZipStream $zip */
-        $zip = Zip::create("my.zip", ["/tmp/test1.txt", "/tmp/test2.txt"]);
+        $zip = Zip::create("small.zip", ["/tmp/test1.txt", "/tmp/test2.txt"]);
         $sizePrediction = $zip->predictZipSize();
         $zip->saveTo("/tmp");
 
-        $this->assertTrue(file_exists("/tmp/my.zip"));
-        $this->assertEquals($sizePrediction, filesize("/tmp/my.zip"));
+        $this->assertFalse($zip->opt->isEnableZip64());
+        $this->assertTrue(file_exists("/tmp/small.zip"));
+        $this->assertEquals($sizePrediction, filesize("/tmp/small.zip"));
 
-        $z = zip_open("/tmp/my.zip");
+        $z = zip_open("/tmp/small.zip");
         $this->assertEquals("this is the first test file for test run $testrun", zip_entry_read(zip_read($z)));
 
-        unlink("/tmp/my.zip");
+        unlink("/tmp/small.zip");
     }
 
     public function testSaveZip64Output()
@@ -51,16 +52,17 @@ class ZipTest extends TestCase
         exec('dd if=/dev/zero count=1024 bs=1048576 >/tmp/medfile.txt');
 
         /** @var ZipStream $zip */
-        $zip = Zip::create("my.zip", ["/tmp/test1.txt", "/tmp/test2.txt", "/tmp/bigfile.txt", "/tmp/medfile.txt"]);
+        $zip = Zip::create("large.zip", ["/tmp/test1.txt", "/tmp/test2.txt", "/tmp/bigfile.txt", "/tmp/medfile.txt"]);
         $sizePrediction = $zip->predictZipSize();
         $zip->saveTo("/tmp");
 
-        $this->assertTrue(file_exists("/tmp/my.zip"));
-        $this->assertEquals($sizePrediction, filesize("/tmp/my.zip"));
+        $this->assertTrue($zip->opt->isEnableZip64());
+        $this->assertTrue(file_exists("/tmp/large.zip"));
+        $this->assertEquals($sizePrediction, filesize("/tmp/large.zip"));
 
-        $z = zip_open("/tmp/my.zip");
+        $z = zip_open("/tmp/large.zip");
         $this->assertEquals("this is the first test file for test run $testrun", zip_entry_read(zip_read($z)));
 
-        unlink("/tmp/my.zip");
+        unlink("/tmp/large.zip");
     }
 }
