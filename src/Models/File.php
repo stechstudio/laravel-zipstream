@@ -55,12 +55,12 @@ abstract class File implements FileContract
             return new S3File($source, $zipPath);
         }
 
-        if (Str::startsWith($source, "/")) {
-            return new LocalFile($source, $zipPath);
-        }
-
         if (Str::startsWith($source, "http") && filter_var($source, FILTER_VALIDATE_URL)) {
             return new HttpFile($source, $zipPath);
+        }
+
+        if (Str::startsWith($source, "/") || file_exists($source)) {
+            return new LocalFile($source, $zipPath);
         }
 
         return new TempFile($source, $zipPath);
