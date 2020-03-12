@@ -18,7 +18,7 @@
         "php": "^7.1",
         "guzzlehttp/guzzle": "^6.0",
         "illuminate/support": "^5.6|^6.0|^7.0",
-        "maennchen/zipstream-php": "^v1.0"
+        "maennchen/zipstream-php": "^v2.0"
     },
     "require-dev": {
         "orchestra/testbench": "^5.0",
