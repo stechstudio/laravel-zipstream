@@ -53,14 +53,7 @@ class S3File extends File
     public function getS3Client(): S3Client
     {
         if (!$this->client) {
-            $this->client = new Aws\S3\S3Client([
-                'region'      => $this->getRegion(),
-                'version'     => '2006-03-01',
-                'credentials' => [
-                    'key'    => config('zipstream.aws.key'),
-                    'secret' => config('zipstream.aws.secret')
-                ]
-            ]);
+            $this->client = app('zipstream.s3client');
         }
 
         return $this->client;
