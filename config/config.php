@@ -22,7 +22,7 @@ return [
             'key'    => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY')
         ],
-        'version'     => '2006-03-01',
+        'version'     => 'latest',
         'region'      => env('ZIPSTREAM_AWS_REGION', env('AWS_DEFAULT_REGION', 'us-east-1'))
     ]
 ];
