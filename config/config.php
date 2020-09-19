@@ -18,11 +18,13 @@ return [
 
     // AWS configs for S3 files
     'aws'     => [
-        'credentials' => [
+        'credentials'             => [
             'key'    => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY')
         ],
-        'version'     => 'latest',
-        'region'      => env('ZIPSTREAM_AWS_REGION', env('AWS_DEFAULT_REGION', 'us-east-1'))
+        'version'                 => 'latest',
+        'endpoint'                => env('AWS_ENDPOINT'),
+        'use_path_style_endpoint' => env('ZIPSTREAM_AWS_PATH_STYLE_ENDPOINT', false),
+        'region'                  => env('ZIPSTREAM_AWS_REGION', env('AWS_DEFAULT_REGION', 'us-east-1'))
     ]
 ];
