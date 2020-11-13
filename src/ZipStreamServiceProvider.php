@@ -39,6 +39,16 @@ class ZipStreamServiceProvider extends ServiceProvider
         $this->app->bind(ArchiveOptions::class, function($app) {
             return $this->buildArchiveOptions($app['config']->get('zipstream.archive'));
         });
+
+        $this->app->bind('zipstream.s3client', function($app) {
+            $config = $app['config']->get('zipstream.aws');
+
+            if(!count(array_filter($config['credentials']))) {
+                $config['credentials'] = false;
+            }
+
+            return new \Aws\S3\S3Client($config);
+        });
     }
 
     /**
@@ -46,7 +56,7 @@ class ZipStreamServiceProvider extends ServiceProvider
      */
     public function provides()
     {
-        return [FileOptions::class, ArchiveOptions::class, 'zipstream'];
+        return [FileOptions::class, ArchiveOptions::class, 'zipstream', 'zipstream.s3client'];
     }
 
     /**

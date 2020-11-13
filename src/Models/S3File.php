@@ -17,18 +17,6 @@ class S3File extends File
     protected $client;
 
     /**
-     * @param string $region
-     *
-     * @return $this
-     */
-    public function setRegion(?string $region = null)
-    {
-        $this->region = $region;
-
-        return $this;
-    }
-
-    /**
      * @return int
      */
     public function calculateFilesize(): int
@@ -40,11 +28,15 @@ class S3File extends File
     }
 
     /**
-     * @return string
+     * @param S3Client $client
+     *
+     * @return mixed
      */
-    public function getRegion(): string
+    public function setS3Client(S3Client $client)
     {
-        return $this->region ?? config('zipstream.aws.region');
+        $this->client = $client;
+
+        return $this;
     }
 
     /**
@@ -53,14 +45,7 @@ class S3File extends File
     public function getS3Client(): S3Client
     {
         if (!$this->client) {
-            $this->client = new Aws\S3\S3Client([
-                'region'      => $this->getRegion(),
-                'version'     => '2006-03-01',
-                'credentials' => [
-                    'key'    => config('zipstream.aws.key'),
-                    'secret' => config('zipstream.aws.secret')
-                ]
-            ]);
+            $this->client = app('zipstream.s3client');
         }
 
         return $this->client;
