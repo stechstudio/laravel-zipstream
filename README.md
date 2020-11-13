@@ -113,18 +113,6 @@ Zip::create("package.zip")
     ->add("s3://bucket-name/path/to/object.pdf", "Something.pdf");
 ```
 
-### Changing the region
-
-If you need to pull files from an S3 region _other_ than what you have specified in `AWS_DEFAULT_REGION` you can make the `File` instance yourself and then set the region name.
-
-```php
-use Zip;
-use STS\ZipStream\Models\File;
-
-Zip::create("package.zip")
-    ->add(File::make("s3://bucket-name/path/to/object.pdf", "Something.pdf")->setRegion("us-west-2"));
-```
-
 ## Zip size prediction
 
 By default this package attempts to predict the final zip size and sends a `Content-Length` header up front. This means users will see accurate progress on their download, even though the zip is being streamed out as it is created!
