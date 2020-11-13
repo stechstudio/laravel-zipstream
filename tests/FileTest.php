@@ -39,4 +39,12 @@ class FileTest extends TestCase
         $this->assertEquals("hi there", $file->getReadableStream()->getContents());
         $this->assertEquals("test.txt", $file->getZipPath());
     }
+
+    public function testSettingFilesize()
+    {
+        $file = new TempFile("hi there", "test.txt");
+        $file->setFilesize(12345);
+
+        $this->assertEquals(12345, $file->getFilesize());
+    }
 }

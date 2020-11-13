@@ -150,6 +150,13 @@ abstract class File implements FileContract
         return $this->filesize;
     }
 
+    public function setFilesize(int $filesize)
+    {
+        $this->filesize = $filesize;
+
+        return $this;
+    }
+
     /**
      * @return int
      */
