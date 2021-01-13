@@ -4,6 +4,7 @@ namespace STS\ZipStream\Tests;
 
 use STS\ZipStream\ZipStream;
 use Zip;
+use ZipArchive;
 use Orchestra\Testbench\TestCase;
 use STS\ZipStream\ZipStreamFacade;
 use STS\ZipStream\ZipStreamServiceProvider;
@@ -37,8 +38,9 @@ class ZipTest extends TestCase
         $this->assertTrue(file_exists("/tmp/small.zip"));
         $this->assertEquals($sizePrediction, filesize("/tmp/small.zip"));
 
-        $z = zip_open("/tmp/small.zip");
-        $this->assertEquals("this is the first test file for test run $testrun", zip_entry_read(zip_read($z)));
+		$z = new ZipArchive();
+        $z->open("/tmp/small.zip");
+        $this->assertEquals("this is the first test file for test run $testrun", $z->getFromIndex(0));
 
         unlink("/tmp/small.zip");
     }
@@ -60,8 +62,9 @@ class ZipTest extends TestCase
         $this->assertTrue(file_exists("/tmp/large.zip"));
         $this->assertEquals($sizePrediction, filesize("/tmp/large.zip"));
 
-        $z = zip_open("/tmp/large.zip");
-        $this->assertEquals("this is the first test file for test run $testrun", zip_entry_read(zip_read($z)));
+        $z = new ZipArchive();
+        $z->open("/tmp/large.zip");
+        $this->assertEquals("this is the first test file for test run $testrun", $z->getFromIndex(0));
 
         unlink("/tmp/large.zip");
     }
