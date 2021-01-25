@@ -40,7 +40,7 @@ abstract class File implements FileContract
     {
         $this->source = $source;
         $this->zipPath = $zipPath ?? $this->getDefaultZipPath();
-        $this->options = $options ?? resolve(FileOptions::class);
+        $this->options = $options ?? app(FileOptions::class);
     }
 
     /**
