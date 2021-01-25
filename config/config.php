@@ -26,5 +26,8 @@ return [
         'endpoint'                => env('AWS_ENDPOINT'),
         'use_path_style_endpoint' => env('ZIPSTREAM_AWS_PATH_STYLE_ENDPOINT', false),
         'region'                  => env('ZIPSTREAM_AWS_REGION', env('AWS_DEFAULT_REGION', 'us-east-1'))
-    ]
+    ],
+
+    // https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/guide_credentials_anonymous.html
+    'aws_anonymous_client' => env('AWS_ANONYMOUS', false)
 ];

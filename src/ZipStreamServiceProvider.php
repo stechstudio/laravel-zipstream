@@ -44,6 +44,10 @@ class ZipStreamServiceProvider extends ServiceProvider
             $config = $app['config']->get('zipstream.aws');
 
             if(!count(array_filter($config['credentials']))) {
+                unset($config['credentials']);
+            }
+
+            if($config['aws_anonymous_client']) {
                 $config['credentials'] = false;
             }
 
