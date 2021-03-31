@@ -2,6 +2,7 @@
 
 namespace STS\ZipStream\Tests;
 
+use Illuminate\Support\Str;
 use STS\ZipStream\ZipStream;
 use Zip;
 use ZipArchive;
@@ -32,17 +33,20 @@ class ZipTest extends TestCase
         /** @var ZipStream $zip */
         $zip = Zip::create("small.zip", ["/tmp/test1.txt", "/tmp/test2.txt"]);
         $sizePrediction = $zip->predictZipSize();
-        $zip->saveTo("/tmp");
+
+        // Create a random folder path that doesn't exist, so we know it was created
+        $dir = "/tmp/" . Str::random();
+        $zip->saveTo($dir);
 
         $this->assertFalse($zip->opt->isEnableZip64());
-        $this->assertTrue(file_exists("/tmp/small.zip"));
-        $this->assertEquals($sizePrediction, filesize("/tmp/small.zip"));
+        $this->assertTrue(file_exists("$dir/small.zip"));
+        $this->assertEquals($sizePrediction, filesize("$dir/small.zip"));
 
 		$z = new ZipArchive();
-        $z->open("/tmp/small.zip");
+        $z->open("$dir/small.zip");
         $this->assertEquals("this is the first test file for test run $testrun", $z->getFromIndex(0));
 
-        unlink("/tmp/small.zip");
+        unlink("$dir/small.zip");
     }
 
     public function testSaveZip64Output()
