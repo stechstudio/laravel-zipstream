@@ -7,6 +7,7 @@ use Aws\S3\S3Client;
 use Aws\S3\S3UriParser;
 use function GuzzleHttp\Psr7\stream_for;
 use Psr\Http\Message\StreamInterface;
+use Aws\S3\Exception\S3Exception;
 
 class S3File extends File
 {
@@ -21,10 +22,14 @@ class S3File extends File
      */
     public function calculateFilesize(): int
     {
-        return $this->getS3Client()->headObject([
-            'Bucket' => $this->getBucket(),
-            'Key'    => $this->getKey()
-        ])->get('ContentLength');
+        try {
+            return $this->getS3Client()->headObject([
+                'Bucket' => $this->getBucket(),
+                'Key' => $this->getKey()
+            ])->get('ContentLength');
+        } catch (S3Exception $e) {
+            return 0;
+        }
     }
 
     /**
@@ -72,10 +77,14 @@ class S3File extends File
      */
     protected function buildReadableStream(): StreamInterface
     {
-        return $this->getS3Client()->getObject([
-            'Bucket' => $this->getBucket(),
-            'Key'    => $this->getKey()
-        ])->get('Body');
+        try {
+            return $this->getS3Client()->getObject([
+                'Bucket' => $this->getBucket(),
+                'Key' => $this->getKey()
+            ])->get('Body');
+        } catch (S3Exception $e) {
+            return stream_for(null);
+        }
     }
 
     /**

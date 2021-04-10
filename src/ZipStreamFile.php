@@ -38,6 +38,11 @@ class ZipStreamFile extends \ZipStream\File
     public function process()
     {
         tap($this->file->getReadableStream(), function (StreamInterface $stream) {
+            // Skip if empty or non-existing.
+            if (!$stream->getSize()) {
+                return;
+            }
+
             $this->processStreamWithZeroHeader($stream);
             $stream->close();
         });
