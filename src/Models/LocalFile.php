@@ -28,6 +28,10 @@ class LocalFile extends File
      */
     protected function buildWritableStream(): StreamInterface
     {
+        if(!is_dir(dirname($this->getSource()))) {
+            mkdir(dirname($this->getSource()), 0777, true);
+        }
+
         return stream_for(fopen($this->getSource(), 'w'));
     }
 }

@@ -286,10 +286,6 @@ class ZipStream extends BaseZipStream implements Responsable
     public function saveTo( $output ): int
     {
         if (!$output instanceof FileContract) {
-            if(!is_dir($output)) {
-                mkdir($output, 0777, true);
-            }
-
             $output = File::make(Str::finish($output, "/") . $this->getName());
         }
 
