@@ -5,7 +5,7 @@ namespace STS\ZipStream;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @method static \STD\ZipStream\ZipStream create(string|null $name, array $files = [])
+ * @method static \STD\ZipStream\ZipStream create(?string $name = null, array $files = [])
  *
  * @see \STS\ZipStream\ZipStream
  */
