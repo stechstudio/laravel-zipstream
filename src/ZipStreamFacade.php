@@ -5,7 +5,9 @@ namespace STS\ZipStream;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @see \Stechstudio\LaravelZipstream\Skeleton\SkeletonClass
+ * @method static \STS\ZipStream\ZipStream create(?string $name = null, array $files = [])
+ *
+ * @see \STS\ZipStream\ZipStream
  */
 class ZipStreamFacade extends Facade
 {
