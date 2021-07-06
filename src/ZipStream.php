@@ -5,6 +5,7 @@ namespace STS\ZipStream;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Contracts\Support\Responsable;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Str;
 use STS\ZipStream\Contracts\FileContract;
 use STS\ZipStream\Events\ZipSizePredictionFailed;
@@ -200,9 +201,9 @@ class ZipStream extends BaseZipStream implements Responsable
      */
     public function response(): StreamedResponse
     {
-        return new StreamedResponse(function () {
+        return Response::streamDownload(function () {
             $this->process();
-        }, 200, $this->getHeaders());
+        }, $this->getName(), $this->getHeaders());
     }
 
     /**
