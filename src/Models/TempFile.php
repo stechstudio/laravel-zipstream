@@ -2,7 +2,7 @@
 
 namespace STS\ZipStream\Models;
 
-use function GuzzleHttp\Psr7\stream_for;
+use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\StreamInterface;
 use STS\ZipStream\Exceptions\FilenameMissingException;
 use STS\ZipStream\Exceptions\NotWritableException;
@@ -35,7 +35,7 @@ class TempFile extends File
      */
     protected function buildReadableStream(): StreamInterface
     {
-        return stream_for($this->getSource());
+        return Utils::streamFor($this->getSource());
     }
 
     /**

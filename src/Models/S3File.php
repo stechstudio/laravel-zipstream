@@ -5,7 +5,7 @@ namespace STS\ZipStream\Models;
 use Aws;
 use Aws\S3\S3Client;
 use Aws\S3\S3UriParser;
-use function GuzzleHttp\Psr7\stream_for;
+use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\StreamInterface;
 
 class S3File extends File
@@ -85,6 +85,6 @@ class S3File extends File
     {
         $this->getS3Client()->registerStreamWrapper();
 
-        return stream_for(fopen($this->getSource(), 'w'));
+        return Utils::streamFor(fopen($this->getSource(), 'w'));
     }
 }

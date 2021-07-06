@@ -2,7 +2,7 @@
 
 namespace STS\ZipStream\Models;
 
-use function GuzzleHttp\Psr7\stream_for;
+use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\StreamInterface;
 
 class LocalFile extends File
@@ -20,7 +20,7 @@ class LocalFile extends File
      */
     protected function buildReadableStream(): StreamInterface
     {
-        return stream_for(fopen($this->getSource(), 'r'));
+        return Utils::streamFor(fopen($this->getSource(), 'r'));
     }
 
     /**
@@ -32,6 +32,6 @@ class LocalFile extends File
             mkdir(dirname($this->getSource()), 0777, true);
         }
 
-        return stream_for(fopen($this->getSource(), 'w'));
+        return Utils::streamFor(fopen($this->getSource(), 'w'));
     }
 }

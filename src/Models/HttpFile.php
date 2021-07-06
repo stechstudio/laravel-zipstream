@@ -2,7 +2,7 @@
 
 namespace STS\ZipStream\Models;
 
-use function GuzzleHttp\Psr7\stream_for;
+use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\StreamInterface;
 use STS\ZipStream\Exceptions\NotWritableException;
 
@@ -27,7 +27,7 @@ class HttpFile extends File
      */
     protected function buildReadableStream(): StreamInterface
     {
-        return stream_for(fopen($this->getSource(), 'r'));
+        return Utils::streamFor(fopen($this->getSource(), 'r'));
     }
 
     /**

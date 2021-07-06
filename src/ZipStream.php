@@ -2,6 +2,7 @@
 
 namespace STS\ZipStream;
 
+use GuzzleHttp\Psr7\Utils;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Contracts\Support\Responsable;
@@ -18,7 +19,6 @@ use ZipStream\ZipStream as BaseZipStream;
 use ZipStream\Option\File as FileOptions;
 use ZipStream\Option\Archive as ArchiveOptions;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use function GuzzleHttp\Psr7\stream_for;
 
 class ZipStream extends BaseZipStream implements Responsable
 {
@@ -271,7 +271,7 @@ class ZipStream extends BaseZipStream implements Responsable
     protected function getOutputStream()
     {
         if (!$this->outputStream) {
-            $this->outputStream = stream_for($this->archiveOptions->getOutputStream());
+            $this->outputStream = Utils::streamFor($this->archiveOptions->getOutputStream());
         }
 
         return $this->outputStream;
