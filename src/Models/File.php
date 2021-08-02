@@ -66,6 +66,15 @@ abstract class File implements FileContract
         return new TempFile($source, $zipPath);
     }
 
+    public static function makeWriteable(string $source, ?string $zipPath = null)
+    {
+        if (Str::startsWith($source, "s3://")) {
+            return new S3File($source, $zipPath);
+        }
+
+        return new LocalFile($source, $zipPath);
+    }
+
     /**
      * @return string
      */

@@ -19,6 +19,14 @@ class FileTest extends TestCase
         $this->assertInstanceOf(TempFile::class, File::make("raw contents", "filename.txt"));
     }
 
+    public function testMakeWriteable()
+    {
+        $this->assertInstanceOf(S3File::class, File::makeWriteable('s3://bucket/key'));
+        $this->assertInstanceOf(LocalFile::class, File::makeWriteable('/tmp/foobar'));
+        $this->assertInstanceOf(LocalFile::class, File::makeWriteable("C:/"));
+        $this->assertInstanceOf(LocalFile::class, File::makeWriteable("C:\\"));
+    }
+
     public function testLocalFile()
     {
         $filename = md5(microtime());
