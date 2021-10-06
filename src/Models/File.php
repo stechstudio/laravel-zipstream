@@ -59,7 +59,7 @@ abstract class File implements FileContract
             return new HttpFile($source, $zipPath);
         }
 
-        if (Str::startsWith($source, "/") || preg_match('/^\w:\//', $source) || file_exists($source)) {
+        if (Str::startsWith($source, "/") || preg_match('/^\w:[\/\\\\]/', $source) || file_exists($source)) {
             return new LocalFile($source, $zipPath);
         }
 

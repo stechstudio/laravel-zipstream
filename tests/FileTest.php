@@ -16,6 +16,7 @@ class FileTest extends TestCase
         $this->assertInstanceOf(LocalFile::class, File::make('/dev/null'));
         $this->assertInstanceOf(LocalFile::class, File::make('/tmp/foobar'));
         $this->assertInstanceOf(LocalFile::class, File::make('C:/foo/bar'));
+        $this->assertInstanceOf(LocalFile::class, File::make('D:\\foo\\bar'));
         $this->assertInstanceOf(TempFile::class, File::make("raw contents", "filename.txt"));
     }
 
