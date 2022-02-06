@@ -3,7 +3,7 @@
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/stechstudio/laravel-zipstream.svg?style=flat-square)](https://packagist.org/packages/stechstudio/laravel-zipstream)
 [![Total Downloads](https://img.shields.io/packagist/dt/stechstudio/laravel-zipstream.svg?style=flat-square)](https://packagist.org/packages/stechstudio/laravel-zipstream)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
-![Build Status](https://app.chipperci.com/projects/5e802d23-b476-4def-9b83-3aecf848322e/status/master)
+![Build Status](https://img.shields.io/endpoint?url=https://app.chipperci.com/projects/5cc95e3c-628f-48c6-815c-1f16621c9514/status/master&style=flat-square)
 
 A fast and simple streaming zip file downloader for Laravel. 
 
