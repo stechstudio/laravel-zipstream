@@ -169,6 +169,13 @@ You might use an internal DB id for your cache name, so that the next time a use
 - `STS\ZipStream\Events\ZipStreamed`: Dispatched when a zip finishes streaming
 - `STS\ZipStream\Events\ZipSizePredictionFailed`: Fired if the predicted filesize doesn't match the final size. If you have filesize prediction enabled it's a good idea to listen for this event and log it, since that might mean the zip download failed or was corrupt for your user. 
 
+## Publishing the config file
+
+You can publish the package's config file by using the following command:
+```bash
+php artisan vendor:publish --provider="STS\ZipStream\ZipStreamServiceProvider" --tag="config"
+```
+
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
