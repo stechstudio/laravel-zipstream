@@ -14,6 +14,8 @@ return [
         'method' => env('ZIPSTREAM_FILE_METHOD', 'store'),
 
         'deflate' => env('ZIPSTREAM_FILE_DEFLATE'),
+
+        'sanitize' => env('ZIPSTREAM_FILE_SANITIZE', true)
     ],
 
     // AWS configs for S3 files
