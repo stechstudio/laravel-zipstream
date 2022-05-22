@@ -19,8 +19,13 @@ class HttpFile extends File
     {
         $headers = $this->getHeaders();
 
+        if(is_array($headers[self::HEADER_CONTENT_LENGTH])){
+            return end($headers[self::HEADER_CONTENT_LENGTH]);
+        }
+
         return $headers[self::HEADER_CONTENT_LENGTH];
     }
+
 
     /**
      * @return StreamInterface
