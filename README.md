@@ -171,9 +171,9 @@ You might use an internal DB id for your cache name, so that the next time a use
 
 ## Filename sanitization
 
-By default this package will try to translate any non-ascii character in filename or folder's name to ascii. For example, if your filename is `中文_にほんご_Ч_Ɯ_☺_someascii.txt`. It will become `__C___someascii.txt` by call Laravel's `Str::ascii($path)`.
+By default this package will try to translate any non-ascii character in filename or folder's name to ascii. For example, if your filename is `中文_にほんご_Ч_Ɯ_☺_someascii.txt`. It will become `__C___someascii.txt` using Laravel's `Str::ascii($path)`.
 
-So if you want to use some special filename, you can disable this feature. You can do it by add below line to your `.env`:
+If you need to preserve non-ascii characters, you can disable this feature with an `.env` setting:
 
 ```env
 ZIPSTREAM_FILE_SANITIZE=false
