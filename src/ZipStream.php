@@ -279,12 +279,16 @@ class ZipStream extends BaseZipStream implements Responsable
 
     /**
      * @param string|FileContract $output
+     * @param string|null $disk
      *
      * @return int
      * @throws OverflowException
      */
-    public function saveTo( $output ): int
+    public function saveTo( $output, ?string $disk = null ): int
     {
+
+        $output = $this->parseDisk($output, $disk);
+
         if (!$output instanceof FileContract) {
             $output = File::makeWriteable(Str::finish($output, "/") . $this->getName());
         }
@@ -292,6 +296,27 @@ class ZipStream extends BaseZipStream implements Responsable
         $this->outputStream = $output->getWritableStream();
 
         return $this->process();
+    }
+
+    /**
+     * @param string|FileContract $output
+     * @param string|null $disk
+     *
+     * @return string|FileContract
+     */
+    public function parseDisk( $output, ?string $disk = null )
+    {
+
+        if (!is_string($output) || !$disk) {
+            return $output;
+        }
+
+        $adapter = \Illuminate\Support\Facades\Storage::disk($disk)->getAdapter();
+        if (is_a($adapter, 'League\Flysystem\AwsS3v3\AwsS3Adapter') && !Str::startsWith('s3://', $output)) {
+            $output = 's3://' . $adapter->getBucket() . Str::start($output, '/');
+        }
+
+        return $output;
     }
 
     /**

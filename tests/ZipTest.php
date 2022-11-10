@@ -72,4 +72,27 @@ class ZipTest extends TestCase
 
         unlink("/tmp/large.zip");
     }
+
+    public function testParseDiskOutput()
+    {
+        /** @var ZipStream $zip */
+        $zip = Zip::create("name.zip", []);
+
+        $path = "/path/to/file.txt";
+
+        $output = $zip->parseDisk($path, 's3');
+        $this->assertEquals("s3://bucket-name/path/to/file.txt", $output);
+
+        $output = $zip->parseDisk($path, 'local');
+        $this->assertEquals("/path/to/file.txt", $output);
+
+        $output = $zip->parseDisk($path);
+        $this->assertEquals("/path/to/file.txt", $output);
+
+        $output = $zip->parseDisk($path, '');
+        $this->assertEquals("/path/to/file.txt", $output);
+
+        $this->expectExceptionMessage('Disk [unexpected] does not have a configured driver');
+        $zip->parseDisk($path, 'unexpected');
+    }
 }

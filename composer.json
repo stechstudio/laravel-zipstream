@@ -21,6 +21,8 @@
         "maennchen/zipstream-php": "^v2.0"
     },
     "require-dev": {
+        "laravel/laravel": "^8.6",
+        "league/flysystem-aws-s3-v3": "^1.0",
         "orchestra/testbench": "^5.0|^6.0|^7.0",
         "phpunit/phpunit": "^9.0"
     },
