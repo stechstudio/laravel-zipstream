@@ -2,12 +2,13 @@
 
 namespace STS\ZipStream;
 
+use Illuminate\Contracts\Support\DeferrableProvider;
 use Illuminate\Support\ServiceProvider;
 use ZipStream\Option\Archive as ArchiveOptions;
 use ZipStream\Option\File as FileOptions;
 use ZipStream\Option\Method;
 
-class ZipStreamServiceProvider extends ServiceProvider
+class ZipStreamServiceProvider extends ServiceProvider implements DeferrableProvider
 {
     /**
      * Bootstrap the application services.
