@@ -72,10 +72,9 @@ class S3File extends File
      */
     protected function buildReadableStream(): StreamInterface
     {
-        return $this->getS3Client()->getObject([
-            'Bucket' => $this->getBucket(),
-            'Key'    => $this->getKey()
-        ])->get('Body');
+        $this->getS3Client()->registerStreamWrapper();
+
+        return Utils::streamFor(fopen($this->getSource(), 'r'));
     }
 
     /**
