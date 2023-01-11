@@ -41,7 +41,7 @@ class ZipStreamServiceProvider extends ServiceProvider implements DeferrableProv
             return $this->buildArchiveOptions($app['config']->get('zipstream.archive'));
         });
 
-        $this->app->bind('zipstream.s3client', function($app) {
+        $this->app->singleton('zipstream.s3client', function($app) {
             $config = $app['config']->get('zipstream.aws');
 
             if(!count(array_filter($config['credentials']))) {
