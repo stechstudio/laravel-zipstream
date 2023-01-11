@@ -1,6 +1,6 @@
 {
     "name": "stechstudio/laravel-zipstream",
-    "description": "Build",
+    "description": "A fast and simple streaming zip file downloader for Laravel.",
     "keywords": [
         "stechstudio",
         "laravel-zipstream"
