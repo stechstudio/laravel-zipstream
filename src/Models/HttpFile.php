@@ -19,6 +19,10 @@ class HttpFile extends File
     {
         $headers = $this->getHeaders();
 
+        if (!array_key_exists(self::HEADER_CONTENT_LENGTH, $headers)) {
+            return false;
+        }
+
         if(is_array($headers[self::HEADER_CONTENT_LENGTH])){
             return end($headers[self::HEADER_CONTENT_LENGTH]);
         }
