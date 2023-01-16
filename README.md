@@ -112,11 +112,12 @@ Zip::create("package.zip")
     ->add("s3://bucket-name/path/to/object.pdf", "Something.pdf");
 ```
 
-By default, this package will try to create an S3 client using the same .env file credenetials and configs that Laravel uses. If needed, you can wire up a custom S3 client to the `zipstream.s3client` container key. Or you can even pass in your own S3 client when adding a file to the zip. To do this, you'll need to create an `S3File` model instance yourself so that you can specify the client, like this:
+By default, this package will try to create an S3 client using the same .env file credentials that Laravel uses. If needed, you can wire up a custom S3 client to the `zipstream.s3client` container key. Or you can even pass in your own S3 client when adding a file to the zip. To do this, you'll need to create an `S3File` model instance yourself so that you can provide the client, like this:
 
 ```php
 use STS\ZipStream\Models\S3File;
 
+// Create your own client however necessary
 $s3 = new Aws\S3\S3Client();
 
 Zip::create("package.zip")->add(
@@ -151,14 +152,6 @@ foreach($files AS $file) {
         File::make($file->path, $file->name)->setFilesize($file->size)
     );
 }
-```
-
-
-
-For speed of execution, you can set the pre-cached file size:
-```php
-Zip::create("package.zip")
-    ->add("/path/to/Some File.pdf")->setFilesize(12345);
 ```
 
 ## Configure compression
