@@ -112,6 +112,13 @@ Zip::create("package.zip")
     ->add("s3://bucket-name/path/to/object.pdf", "Something.pdf");
 ```
 
+You can use an external S3 client when creating the zip:
+```php
+$s3 = new Aws\S3\S3Client();
+Zip::create("package.zip")
+    ->add("s3://bucket-name/path/to/object.pdf")->setS3Client($s3);
+```
+
 ## Zip size prediction
 
 By default this package attempts to predict the final zip size and sends a `Content-Length` header up front. This means users will see accurate progress on their download, even though the zip is being streamed out as it is created!
@@ -119,6 +126,12 @@ By default this package attempts to predict the final zip size and sends a `Cont
 This only works if files are not compressed.
 
 If you have issues with the zip size prediction you can disable it with `ZIPSTREAM_PREDICT_SIZE=false` in your .env file.
+
+For speed of execution, you can set the pre-cached file size:
+```php
+Zip::create("package.zip")
+    ->add("/path/to/Some File.pdf")->setFilesize(12345);
+```
 
 ## Configure compression
 
