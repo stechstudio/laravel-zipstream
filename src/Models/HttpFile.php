@@ -49,7 +49,7 @@ class HttpFile extends File
      */
     public function canPredictZipDataSize(): bool
     {
-        return array_key_exists(self::HEADER_CONTENT_LENGTH, $this->getHeaders()) &&
+        return (is_int($this->filesize) || array_key_exists(self::HEADER_CONTENT_LENGTH, $this->getHeaders())) &&
             parent::canPredictZipDataSize();
     }
 
