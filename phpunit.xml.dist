@@ -21,4 +21,8 @@
             <directory>tests</directory>
         </testsuite>
     </testsuites>
+    <php>
+        <env name="AWS_BUCKET" value="bucket-name" />
+        <env name="AWS_DEFAULT_REGION" value="us-west-1" />
+    </php>
 </phpunit>
