@@ -5,6 +5,9 @@ namespace STS\ZipStream\Tests\SizeEstimation;
 use STS\ZipStream\Contracts\FileContract;
 use STS\ZipStream\Models\LocalFile;
 
+/**
+ * @group big
+ */
 class BigLocalFileArchiveSizeEstimationTest extends SingleFileArchiveSizeEstimationTestCase
 {
     private const TEST_FILE_PATH = "/tmp/bigfile.txt";

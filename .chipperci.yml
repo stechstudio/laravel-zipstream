@@ -9,4 +9,4 @@ pipeline:
       composer install --no-interaction --prefer-dist --optimize-autoloader
 
   - name: Run Tests
-    cmd: phpunit
+    cmd: phpunit --exclude big
