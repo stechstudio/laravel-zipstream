@@ -49,6 +49,9 @@ class ZipTest extends TestCase
         unlink("$dir/small.zip");
     }
 
+    /**
+     * @group big
+     */
     public function testSaveZip64Output()
     {
         $testrun = microtime();
