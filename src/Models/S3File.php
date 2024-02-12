@@ -21,6 +21,10 @@ class S3File extends File
      */
     public function calculateFilesize(): int
     {
+        if(config('zipstream.archive.predict') == false) {
+            return 0;
+        }
+
         return $this->getS3Client()->headObject([
             'Bucket' => $this->getBucket(),
             'Key'    => $this->getKey()

@@ -6,7 +6,7 @@
 return [
     // Default options for our archives
     'archive' => [
-        'predict' => env('ZIPSTREAM_PREDICT_SIZE', true)
+        'predict' => env('ZIPSTREAM_PREDICT_SIZE', false)
     ],
 
     // Default options for files added
