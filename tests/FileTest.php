@@ -57,6 +57,19 @@ class FileTest extends TestCase
         $this->assertEquals("test.txt", $file->getZipPath());
     }
 
+    public function testS3File()
+    {
+        $file = new S3File("s3://bucket/key");
+
+        $this->assertEquals('bucket', $file->getBucket());
+        $this->assertEquals('key', $file->getKey());
+
+        $file_with_fragment = new S3File("s3://bucket/key#afterhash");
+
+        $this->assertEquals('bucket', $file_with_fragment->getBucket());
+        $this->assertEquals('key#afterhash', $file_with_fragment->getKey());
+    }
+
     public function testSettingFilesize()
     {
         $file = new TempFile("hi there", "test.txt");
