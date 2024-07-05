@@ -10,7 +10,7 @@ use STS\ZipStream\Exceptions\NotWritableException;
 
 class TempFile extends File
 {
-    protected function getDefaultZipPath()
+    protected function getDefaultZipPath(): string
     {
         // For temp files (raw data provided) you MUST specify the zip path
         throw new FilenameMissingException();

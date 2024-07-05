@@ -102,11 +102,12 @@ class Builder implements Responsable
 
     public function cache($output): self
     {
-        if (!$output instanceof FileContract) {
-            $output = File::make($output);
-        }
-
-        $this->cacheOutputStream = $output->getWritableStream();
+        $this->cacheOutputStream = match (true) {
+            $output instanceof StreamInterface => $output,
+            $output instanceof FileContract    => $output->getWritableStream(),
+            is_string($output)                 => File::makeWriteable($output)->getWritableStream(),
+            default                            => throw new InvalidArgumentException('Invalid cache output provided'),
+        };
 
         return $this;
     }
