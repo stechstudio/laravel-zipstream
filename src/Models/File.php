@@ -16,6 +16,8 @@ abstract class File implements FileContract
 
     protected string $zipPath;
 
+    protected string $comment = '';
+
     protected array $options = [];
 
     protected int $filesize;
@@ -67,7 +69,7 @@ abstract class File implements FileContract
         return $this->source;
     }
 
-    protected function getDefaultZipPath()
+    protected function getDefaultZipPath(): string
     {
         return basename($this->getSource());
     }
@@ -79,6 +81,18 @@ abstract class File implements FileContract
         return config('zipstream.ascii_filenames')
             ? Str::ascii($path)
             : $path;
+    }
+
+    public function setComment(string $comment): self
+    {
+        $this->comment = $comment;
+
+        return $this;
+    }
+
+    public function getComment(): string
+    {
+        return $this->comment;
     }
 
     public function getReadableStream(): StreamInterface
@@ -125,7 +139,7 @@ abstract class File implements FileContract
 
     public function getFingerprint(): string
     {
-        return md5($this->getSource().$this->getZipPath().$this->getFilesize());
+        return md5($this->getSource().$this->getZipPath().$this->getFilesize().$this->getComment());
     }
 
     public function setOption($name, $value): static
@@ -149,6 +163,7 @@ abstract class File implements FileContract
         $zip->addFileFromCallback(
             fileName: $this->getZipPath(),
             callback: fn () => $this->getReadableStream(),
+            comment: $this->getComment(),
             compressionMethod: $this->compressionMethod(),
             exactSize: $this->getFilesize()
         );

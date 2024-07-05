@@ -22,6 +22,8 @@ class Builder implements Responsable
 
     protected string $comment = '';
 
+    protected int $bytesSent = 0;
+
     protected Collection $meta;
 
     protected Collection $queue;
@@ -86,6 +88,18 @@ class Builder implements Responsable
         return $this->meta ?? collect();
     }
 
+    public function setComment(string $comment): self
+    {
+        $this->comment = $comment;
+
+        return $this;
+    }
+
+    public function getComment(): string
+    {
+        return $this->comment;
+    }
+
     public function cache($output): self
     {
         if (!$output instanceof FileContract) {
@@ -144,6 +158,8 @@ class Builder implements Responsable
             $this->cacheOutputStream->close();
         }
 
+        $this->bytesSent = $size;
+
         event(new ZipStreamed($this, $zip, $size));
 
         return $size;
@@ -160,8 +176,9 @@ class Builder implements Responsable
     {
         return md5(
             $this->queue->map->getFingerprint()->sort()->implode('')
-            .$this->getOutputName()
-            .serialize($this->getMeta()->sort()->toArray())
+            . $this->getOutputName()
+            . $this->getComment()
+            . serialize($this->getMeta()->sort()->toArray())
         );
     }
 
@@ -191,7 +208,7 @@ class Builder implements Responsable
     {
         $zip = new ZipStream(
             operationMode: $this->canPredictZipSize() ? OperationMode::SIMULATE_STRICT : OperationMode::NORMAL,
-            comment: $this->comment,
+            comment: $this->getComment(),
             outputStream: $this->getOutputStream(),
             outputName: $this->getOutputName(),
         );
