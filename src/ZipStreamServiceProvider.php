@@ -28,35 +28,8 @@ class ZipStreamServiceProvider extends PackageServiceProvider
         });
     }
 
-    /**
-     * @return array
-     */
-    public function provides()
+    public function provides(): array
     {
-        return [FileOptions::class, ArchiveOptions::class, 'zipstream', 'zipstream.s3client'];
-    }
-
-    /**
-     * @return ArchiveOptions
-     */
-    protected function buildArchiveOptions(array $config)
-    {
-        return tap(new ArchiveOptions(), function(ArchiveOptions $options) use($config) {
-            $options->setZeroHeader(true);
-        });
-    }
-
-    /**
-     * @return FileOptions
-     */
-    protected function buildFileOptions(array $config)
-    {
-        return tap(new FileOptions(), function(FileOptions $options) use($config) {
-            $options->setMethod(Method::{strtoupper($config['method'])}());
-
-            if($config['deflate']) {
-                $options->setDeflateLevel($config['deflate']);
-            }
-        });
+        return ['zipstream.builder', 'zipstream.s3client'];
     }
 }
