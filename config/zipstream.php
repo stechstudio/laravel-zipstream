@@ -1,22 +1,15 @@
 <?php
+use ZipStream\CompressionMethod;
 
-/*
- * You can place your custom package configuration in here.
- */
 return [
-    // Default options for our archives
-    'archive' => [
-        'predict' => env('ZIPSTREAM_PREDICT_SIZE', true)
-    ],
+    // Try to predict the zip size up front and send a Content-Length header
+    'predict_size' => env('ZIPSTREAM_PREDICT_SIZE', true),
 
-    // Default options for files added
-    'file'    => [
-        'method' => env('ZIPSTREAM_FILE_METHOD', 'store'),
+    // Compression method used only if we don't (or can't) predict the zip size
+    'compression_method' => env('ZIPSTREAM_FILE_METHOD', CompressionMethod::STORE),
 
-        'deflate' => env('ZIPSTREAM_FILE_DEFLATE'),
-
-        'sanitize' => env('ZIPSTREAM_FILE_SANITIZE', true)
-    ],
+    // Remove all non-ascii characters from filenames
+    'ascii_filenames' => env('ZIPSTREAM_ASCII_FILENAMES', true),
 
     // AWS configs for S3 files
     'aws'     => [

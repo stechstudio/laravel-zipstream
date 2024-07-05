@@ -9,41 +9,30 @@ use STS\ZipStream\Exceptions\NotWritableException;
 
 class TempFile extends File
 {
-    /**
-     * For temp files (raw data provided) you MUST specify the zip path
-     *
-     * @return string
-     * @throws FilenameMissingException
-     */
     protected function getDefaultZipPath()
     {
+        // For temp files (raw data provided) you MUST specify the zip path
         throw new FilenameMissingException();
     }
 
-    /**
-     * Note: strlen returns actual bytes used, mb_strlen returns number of characters. We want strlen.
-     *
-     * @return int
-     */
     public function calculateFilesize(): int
     {
+        // Note: strlen returns actual bytes used, mb_strlen returns number of characters. We want strlen.
         return strlen($this->getSource());
     }
 
-    /**
-     * @return StreamInterface
-     */
     protected function buildReadableStream(): StreamInterface
     {
         return Utils::streamFor($this->getSource());
     }
 
-    /**
-     * @return StreamInterface
-     * @throws NotWritableException
-     */
     protected function buildWritableStream(): StreamInterface
     {
         throw new NotWritableException();
+    }
+
+    public function canPredictZipDataSize(): bool
+    {
+        return true;
     }
 }

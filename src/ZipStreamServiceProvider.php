@@ -2,44 +2,16 @@
 
 namespace STS\ZipStream;
 
-use Illuminate\Contracts\Support\DeferrableProvider;
-use Illuminate\Support\ServiceProvider;
-use ZipStream\Option\Archive as ArchiveOptions;
-use ZipStream\Option\File as FileOptions;
-use ZipStream\Option\Method;
+use Spatie\LaravelPackageTools\Package;
+use Spatie\LaravelPackageTools\PackageServiceProvider;
 
-class ZipStreamServiceProvider extends ServiceProvider implements DeferrableProvider
+class ZipStreamServiceProvider extends PackageServiceProvider
 {
-    /**
-     * Bootstrap the application services.
-     */
-    public function boot()
+    public function configurePackage(Package $package): void
     {
-        if ($this->app->runningInConsole()) {
-            $this->publishes([
-                __DIR__.'/../config/config.php' => config_path('zipstream.php'),
-            ], 'config');
-        }
-    }
+        $package->name('zipstream')->hasConfigFile();
 
-    /**
-     * Register the application services.
-     */
-    public function register()
-    {
-        // Automatically apply the package configuration
-        $this->mergeConfigFrom(__DIR__.'/../config/config.php', 'zipstream');
-
-        // Register the main class to use with the container binding
-        $this->app->singleton('zipstream', ZipStream::class);
-
-        $this->app->bind(FileOptions::class, function($app) {
-            return $this->buildFileOptions($app['config']->get('zipstream.file'));
-        });
-
-        $this->app->bind(ArchiveOptions::class, function($app) {
-            return $this->buildArchiveOptions($app['config']->get('zipstream.archive'));
-        });
+        $this->app->singleton('zipstream.builder', Builder::class);
 
         $this->app->singleton('zipstream.s3client', function($app) {
             $config = $app['config']->get('zipstream.aws');

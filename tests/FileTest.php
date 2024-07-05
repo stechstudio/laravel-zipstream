@@ -65,13 +65,13 @@ class FileTest extends TestCase
         $this->assertEquals(12345, $file->getFilesize());
     }
 
-    public function testSanitizeFilename()
+    public function testAsciiFilename()
     {
         // Default is to sanitize the filename
         $file = new TempFile("hi there", "ϩtrÂͶğƎ♡.txt");
         $this->assertEquals('trAg.txt', $file->getZipPath());
 
-        config(['zipstream.file.sanitize' => false]);
+        config(['zipstream.ascii_filenames' => false]);
         $this->assertEquals("ϩtrÂͶğƎ♡.txt", $file->getZipPath());
     }
 }

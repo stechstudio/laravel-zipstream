@@ -10,15 +10,10 @@ use Psr\Http\Message\StreamInterface;
 
 class S3File extends File
 {
-    /** @var string */
-    protected $region;
+    protected string $region;
 
-    /** @var S3Client */
-    protected $client;
+    protected S3Client $client;
 
-    /**
-     * @return int
-     */
     public function calculateFilesize(): int
     {
         return $this->getS3Client()->headObject([
@@ -27,49 +22,32 @@ class S3File extends File
         ])->get('ContentLength');
     }
 
-    /**
-     * @param S3Client $client
-     *
-     * @return mixed
-     */
-    public function setS3Client(S3Client $client)
+    public function setS3Client(S3Client $client): self
     {
         $this->client = $client;
 
         return $this;
     }
 
-    /**
-     * @return S3Client
-     */
     public function getS3Client(): S3Client
     {
-        if (!$this->client) {
+        if (!isset($this->client)) {
             $this->client = app('zipstream.s3client');
         }
 
         return $this->client;
     }
 
-    /**
-     * @return string
-     */
     public function getBucket(): string
     {
         return parse_url($this->getSource(), PHP_URL_HOST);
     }
 
-    /**
-     * @return string
-     */
     public function getKey(): string
     {
         return ltrim(parse_url($this->getSource(), PHP_URL_PATH), "/");
     }
 
-    /**
-     * @return StreamInterface
-     */
     protected function buildReadableStream(): StreamInterface
     {
         $this->getS3Client()->registerStreamWrapper();
@@ -77,13 +55,15 @@ class S3File extends File
         return Utils::streamFor(fopen($this->getSource(), 'r'));
     }
 
-    /**
-     * @return StreamInterface
-     */
     protected function buildWritableStream(): StreamInterface
     {
         $this->getS3Client()->registerStreamWrapper();
 
         return Utils::streamFor(fopen($this->getSource(), 'w'));
+    }
+
+    public function canPredictZipDataSize(): bool
+    {
+        return true;
     }
 }

@@ -9,12 +9,9 @@ use STS\ZipStream\Exceptions\NotWritableException;
 class HttpFile extends File
 {
     private const HEADER_CONTENT_LENGTH = 'content-length';
-    /** @var array */
-    private $headers;
 
-    /**
-     * @return int
-     */
+    private array $headers;
+
     public function calculateFilesize(): int
     {
         $headers = $this->getHeaders();
@@ -30,39 +27,24 @@ class HttpFile extends File
         return $headers[self::HEADER_CONTENT_LENGTH];
     }
 
-
-    /**
-     * @return StreamInterface
-     */
     protected function buildReadableStream(): StreamInterface
     {
         return Utils::streamFor(fopen($this->getSource(), 'r'));
     }
 
-    /**
-     * @return StreamInterface
-     * @throws NotWritableException
-     */
     protected function buildWritableStream(): StreamInterface
     {
         throw new NotWritableException();
     }
 
-    /**
-     * @inheritdoc
-     */
     public function canPredictZipDataSize(): bool
     {
-        return (is_int($this->filesize) || array_key_exists(self::HEADER_CONTENT_LENGTH, $this->getHeaders())) &&
-            parent::canPredictZipDataSize();
+        return (is_int($this->filesize) || array_key_exists(self::HEADER_CONTENT_LENGTH, $this->getHeaders()));
     }
 
-    /**
-     * @return array
-     */
     protected function getHeaders(): array
     {
-        if (!$this->headers) {
+        if (!isset($this->headers)) {
             $this->headers = array_change_key_case(get_headers($this->getSource(), 1));
         }
 

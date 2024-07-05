@@ -7,25 +7,16 @@ use Psr\Http\Message\StreamInterface;
 
 class LocalFile extends File
 {
-    /**
-     * @return int
-     */
     public function calculateFilesize(): int
     {
         return filesize($this->getSource());
     }
 
-    /**
-     * @return StreamInterface
-     */
     protected function buildReadableStream(): StreamInterface
     {
         return Utils::streamFor(fopen($this->getSource(), 'r'));
     }
 
-    /**
-     * @return StreamInterface
-     */
     protected function buildWritableStream(): StreamInterface
     {
         if(!is_dir(dirname($this->getSource()))) {
@@ -33,5 +24,10 @@ class LocalFile extends File
         }
 
         return Utils::streamFor(fopen($this->getSource(), 'w'));
+    }
+
+    public function canPredictZipDataSize(): bool
+    {
+        return true;
     }
 }

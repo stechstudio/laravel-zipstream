@@ -2,15 +2,15 @@
 
 namespace STS\ZipStream\Tests\SizeEstimation;
 
-use STS\ZipStream\ZipStream;
+use STS\ZipStream\ZipStreamOld;
 use Zip;
 use Orchestra\Testbench\TestCase;
-use STS\ZipStream\ZipStreamFacade;
+use STS\ZipStream\Facades\Zip;
 use STS\ZipStream\ZipStreamServiceProvider;
 
 class SizeEstimationTestCase extends TestCase
 {
-    /** @var ZipStream */
+    /** @var ZipStreamOld */
     protected $zip;
     /** @var string */
     protected $zipName = "zip.zip";
@@ -40,7 +40,7 @@ class SizeEstimationTestCase extends TestCase
     protected function getPackageAliases($app)
     {
         return [
-            'Zip' => ZipStreamFacade::class
+            'Zip' => Zip::class
         ];
     }
 

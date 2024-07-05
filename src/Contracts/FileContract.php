@@ -18,8 +18,6 @@ interface FileContract
 
     public function getFingerprint(): string;
 
-    public function getOptions(): FileOptions;
-
     public function getReadableStream(): StreamInterface;
 
     public function getWritableStream(): StreamInterface;

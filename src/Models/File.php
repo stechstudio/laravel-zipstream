@@ -2,54 +2,35 @@
 
 namespace STS\ZipStream\Models;
 
+use Illuminate\Support\Arr;
 use Psr\Http\Message\StreamInterface;
 use Illuminate\Support\Str;
 use STS\ZipStream\Contracts\FileContract;
-use STS\ZipStream\ZipStream;
-use STS\ZipStream\ZipStreamFile;
-use ZipStream\Option\Archive as ArchiveOptions;
-use ZipStream\Option\File as FileOptions;
-use ZipStream\Option\Method;
+use ZipStream\CompressionMethod;
+use ZipStream\ZipStream;
 
 abstract class File implements FileContract
 {
-    /** @var string */
-    protected $source;
+    protected string $source;
 
-    /** @var string */
-    protected $zipPath;
+    protected string $zipPath;
 
-    /** @var int */
-    protected $filesize;
+    protected array $options = [];
 
-    /** @var StreamInterface */
-    protected $readStream;
+    protected int $filesize;
 
-    /** @var StreamInterface */
-    protected $writeStream;
+    protected StreamInterface $readStream;
 
-    /** @var FileOptions */
-    protected $options;
+    protected StreamInterface $writeStream;
 
-    /**
-     * @param string $source
-     * @param string|null $zipPath
-     * @param FileOptions|null $options
-     */
-    public function __construct(string $source, ?string $zipPath = null, ?FileOptions $options = null)
+    public function __construct(string $source, ?string $zipPath = null, array $options = [])
     {
         $this->source = $source;
         $this->zipPath = $zipPath ?? $this->getDefaultZipPath();
-        $this->options = $options ?? app(FileOptions::class);
+        $this->options = $options;
     }
 
-    /**
-     * @param string $source
-     * @param string|null $zipPath
-     *
-     * @return FileContract
-     */
-    public static function make(string $source, ?string $zipPath = null)
+    public static function make(string $source, ?string $zipPath = null): FileContract
     {
         if (Str::startsWith($source, "s3://")) {
             return new S3File($source, $zipPath);
@@ -66,7 +47,7 @@ abstract class File implements FileContract
         return new TempFile($source, $zipPath);
     }
 
-    public static function makeWriteable(string $source, ?string $zipPath = null)
+    public static function makeWriteable(string $source, ?string $zipPath = null): S3File|LocalFile
     {
         if (Str::startsWith($source, "s3://")) {
             return new S3File($source, $zipPath);
@@ -75,131 +56,96 @@ abstract class File implements FileContract
         return new LocalFile($source, $zipPath);
     }
 
-    /**
-     * @return string
-     */
     public function getName(): string
     {
         return basename($this->getZipPath());
     }
 
-    /**
-     * @return string
-     */
     public function getSource(): string
     {
         return $this->source;
     }
 
-    /**
-     * @return string
-     */
     protected function getDefaultZipPath()
     {
         return basename($this->getSource());
     }
 
-    /**
-     * @return string
-     */
     public function getZipPath(): string
     {
         $path = ltrim(preg_replace('|/{2,}|', '/', $this->zipPath), '/');
 
-        return config('zipstream.file.sanitize')
+        return config('zipstream.ascii_filenames')
             ? Str::ascii($path)
             : $path;
     }
 
-    /**
-     * @return StreamInterface
-     */
     public function getReadableStream(): StreamInterface
     {
-        if (!$this->readStream) {
+        if (!isset($this->readStream)) {
             $this->readStream = $this->buildReadableStream();
         }
 
         return $this->readStream;
     }
 
-    /**
-     * @return StreamInterface
-     */
     public function getWritableStream(): StreamInterface
     {
-        if (!$this->writeStream) {
+        if (!isset($this->writeStream)) {
             $this->writeStream = $this->buildWritableStream();
         }
 
         return $this->writeStream;
     }
 
-    /**
-     * @return StreamInterface
-     */
     abstract protected function buildReadableStream(): StreamInterface;
 
-    /**
-     * @return StreamInterface
-     */
     abstract protected function buildWritableStream(): StreamInterface;
 
-    /**
-     * @return int
-     */
     public function getFilesize(): int
     {
-        if (!$this->filesize) {
+        if (!isset($this->filesize)) {
             $this->filesize = $this->calculateFilesize();
         }
 
         return $this->filesize;
     }
 
-    public function setFilesize(int $filesize)
+    public function setFilesize(int $filesize): self
     {
         $this->filesize = $filesize;
 
         return $this;
     }
 
-    /**
-     * @return int
-     */
+    abstract public function canPredictZipDataSize(): bool;
+
     abstract protected function calculateFilesize(): int;
 
-    /**
-     * @return string
-     */
     public function getFingerprint(): string
     {
-        return md5($this->getSource() . $this->getZipPath() . $this->getFilesize());
+        return md5($this->getSource().$this->getZipPath().$this->getFilesize());
     }
 
-    /**
-     * @return FileOptions
-     */
-    public function getOptions(): FileOptions
+    public function setOption($name, $value): static
     {
-        return $this->options;
+        $this->options[$name] = $value;
+
+        return $this;
     }
 
-    /**
-     * return bool
-     */
-    public function canPredictZipDataSize(): bool
+    public function compressionMethod()
     {
-        return $this->options->getMethod() == Method::STORE();
+        return Arr::get($this->options, 'compressionMethod', config('zipstream.compression_method', CompressionMethod::STORE));
     }
 
-    /**
-     * @param ZipStream $zip
-     *
-     * @return ZipStreamFile
-     */
-    public function toZipStreamFile(ZipStream $zip): ZipStreamFile
+    public function prepare(ZipStream $zip): void
     {
-        return new ZipStreamFile($zip, $this);
+        $zip->addFileFromCallback(
+            fileName: $this->getZipPath(),
+            callback: fn () => $this->getReadableStream(),
+            compressionMethod: $this->compressionMethod(),
+            exactSize: $this->getFilesize()
+        );
     }
 }
