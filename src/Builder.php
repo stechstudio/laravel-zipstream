@@ -5,6 +5,7 @@ namespace STS\ZipStream;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 use Psr\Http\Message\StreamInterface;
 use STS\ZipStream\Contracts\FileContract;
 use STS\ZipStream\Events\ZipStreamed;
@@ -68,12 +69,12 @@ class Builder implements Responsable
         return $this;
     }
 
-    public function addRaw( $content, string $zipPath ): self
+    public function addRaw($content, string $zipPath): self
     {
         return $this->add(new TempFile($content, $zipPath));
     }
 
-    public function setMeta( array $meta ): self
+    public function setMeta(array $meta): self
     {
         $this->meta = collect($meta);
 
@@ -85,7 +86,7 @@ class Builder implements Responsable
         return $this->meta ?? collect();
     }
 
-    public function cache( $output ): self
+    public function cache($output): self
     {
         if (!$output instanceof FileContract) {
             $output = File::make($output);
@@ -102,20 +103,22 @@ class Builder implements Responsable
             $this->outputStream = new OutputStream(fopen('php://output', 'wb'));
         }
 
-        if(isset($this->cacheOutputStream)) {
+        if (isset($this->cacheOutputStream)) {
             $this->outputStream->cacheTo($this->cacheOutputStream);
         }
 
         return $this->outputStream;
     }
 
-    public function saveTo( $output ): int
+    public function saveTo($output): int
     {
-        if (!$output instanceof FileContract) {
-            $output = File::makeWriteable(Str::finish($output, "/") . $this->getOutputName());
-        }
-
-        $this->outputStream = $output->getWritableStream();
+        $this->outputStream = match (true) {
+            $output instanceof OutputStream    => $output,
+            $output instanceof StreamInterface => new OutputStream($output),
+            $output instanceof FileContract    => $output->getWritableStream(),
+            is_string($output)                 => File::makeWriteable(Str::finish($output, "/").$this->getOutputName())->getWritableStream(),
+            default                            => throw new InvalidArgumentException('Invalid output provided'),
+        };
 
         return $this->process();
     }
@@ -124,9 +127,9 @@ class Builder implements Responsable
     {
         $zip = $this->prepare();
 
-        if($this->canPredictZipSize()) {
+        if ($this->canPredictZipSize()) {
             $size = $zip->finish();
-            header('Content-Length: '. $size);
+            header('Content-Length: '.$size);
 
             event(new ZipStreaming($this, $zip, $size));
 
@@ -157,8 +160,8 @@ class Builder implements Responsable
     {
         return md5(
             $this->queue->map->getFingerprint()->sort()->implode('')
-            . $this->getOutputName()
-            . serialize($this->getMeta()->sort()->toArray())
+            .$this->getOutputName()
+            .serialize($this->getMeta()->sort()->toArray())
         );
     }
 
@@ -179,7 +182,7 @@ class Builder implements Responsable
         }, 200, ['X-Accel-Buffering' => 'no']);
     }
 
-    public function toResponse( $request ): StreamedResponse
+    public function toResponse($request): StreamedResponse
     {
         return $this->response();
     }
@@ -192,7 +195,7 @@ class Builder implements Responsable
             outputStream: $this->getOutputStream(),
             outputName: $this->getOutputName(),
         );
-        
+
         $this->queue->each->prepare($zip);
 
         return $zip;

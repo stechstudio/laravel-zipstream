@@ -2,8 +2,10 @@
 
 namespace STS\ZipStream\Tests;
 
+use GuzzleHttp\Psr7\BufferStream;
 use Illuminate\Support\Str;
 use STS\ZipStream\Builder;
+use STS\ZipStream\Models\File;
 use ZipArchive;
 use Orchestra\Testbench\TestCase;
 use STS\ZipStream\Facades\Zip;
@@ -30,42 +32,45 @@ class ZipTest extends TestCase
         file_put_contents("/tmp/test2.txt", "this is the second test file for test run $testrun");
 
         /** @var Builder $zip */
-        $zip = Zip::create("small.zip", ["/tmp/test1.txt", "/tmp/test2.txt"]);
+        $zip = Zip::create("test.zip", ["/tmp/test1.txt", "/tmp/test2.txt"]);
 
         // Create a random folder path that doesn't exist, so we know it was created
         $dir = "/tmp/" . Str::random();
         $zip->saveTo($dir);
 
-        $this->assertTrue(file_exists("$dir/small.zip"));
+        $this->assertTrue(file_exists("$dir/test.zip"));
 
 		$z = new ZipArchive();
-        $z->open("$dir/small.zip");
+        $z->open("$dir/test.zip");
         $this->assertEquals("this is the first test file for test run $testrun", $z->getFromIndex(0));
 
-        unlink("$dir/small.zip");
+        unlink("$dir/test.zip");
     }
 
-    /**
-     * @group big
-     */
-    public function testSaveZip64Output()
+    public function testSaveZipOutputWithCaching()
     {
         $testrun = microtime();
         file_put_contents("/tmp/test1.txt", "this is the first test file for test run $testrun");
         file_put_contents("/tmp/test2.txt", "this is the second test file for test run $testrun");
-        exec('dd if=/dev/zero count=5120 bs=1048576 >/tmp/bigfile.txt');
-        exec('dd if=/dev/zero count=1024 bs=1048576 >/tmp/medfile.txt');
 
         /** @var Builder $zip */
-        $zip = Zip::create("large.zip", ["/tmp/test1.txt", "/tmp/test2.txt", "/tmp/bigfile.txt", "/tmp/medfile.txt"]);
-        $zip->saveTo("/tmp");
+        $zip = Zip::create("test.zip", ["/tmp/test1.txt", "/tmp/test2.txt"]);
 
-        $this->assertTrue(file_exists("/tmp/large.zip"));
+        // Create a random folder path that doesn't exist, so we know it was created
+        $dir = "/tmp/" . Str::random();
 
-        $z = new ZipArchive();
-        $z->open("/tmp/large.zip");
-        $this->assertEquals("this is the first test file for test run $testrun", $z->getFromIndex(0));
+        // This time we're going to CACHE the file to disk while setting the primary output elsewhere
+        $zip->cache("$dir/test.zip");
 
-        unlink("/tmp/large.zip");
+        // We'll save it to a memory buffer as the primary output
+        $size = $zip->saveTo($stream = new BufferStream());
+
+        $this->assertTrue(file_exists("$dir/test.zip"));
+
+        // We should now have a matching buffer size and cached zip file on disk
+        $this->assertEquals($size, $stream->getSize());
+        $this->assertEquals($size, filesize("$dir/test.zip"));
+
+        unlink("$dir/test.zip");
     }
 }

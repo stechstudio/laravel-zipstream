@@ -22,7 +22,7 @@ abstract class File implements FileContract
 
     protected StreamInterface $readStream;
 
-    protected StreamInterface $writeStream;
+    protected OutputStream $writeStream;
 
     public function __construct(string $source, ?string $zipPath = null, array $options = [])
     {
@@ -90,7 +90,7 @@ abstract class File implements FileContract
         return $this->readStream;
     }
 
-    public function getWritableStream(): StreamInterface
+    public function getWritableStream(): OutputStream
     {
         if (!isset($this->writeStream)) {
             $this->writeStream = $this->buildWritableStream();

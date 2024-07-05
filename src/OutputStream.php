@@ -2,12 +2,22 @@
 
 namespace STS\ZipStream;
 
-use GuzzleHttp\Psr7\Stream;
+use GuzzleHttp\Psr7\StreamDecoratorTrait;
+use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\StreamInterface;
 
-class OutputStream extends Stream
+class OutputStream implements StreamInterface
 {
-    protected ?StreamInterface $cached;
+    use StreamDecoratorTrait;
+
+    protected StreamInterface $stream;
+
+    protected ?StreamInterface $cached = null;
+
+    public function __construct($stream)
+    {
+        $this->stream = Utils::streamFor($stream);
+    }
 
     public function cacheTo(StreamInterface $stream): self
     {
@@ -18,7 +28,7 @@ class OutputStream extends Stream
 
     public function write($string): int
     {
-        $result = parent::write($string);
+        $result = $this->stream->write($string);
 
         $this->cached()?->write($string);
 
@@ -27,7 +37,7 @@ class OutputStream extends Stream
 
     public function close(): void
     {
-        parent::close();
+        $this->stream->close();
 
         $this->cached()?->close();
     }
