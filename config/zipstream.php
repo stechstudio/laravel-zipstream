@@ -6,7 +6,7 @@ return [
     'predict_size' => env('ZIPSTREAM_PREDICT_SIZE', true),
 
     // Compression method used only if we don't (or can't) predict the zip size
-    'compression_method' => env('ZIPSTREAM_FILE_METHOD', CompressionMethod::STORE),
+    'compression_method' => env('ZIPSTREAM_COMPRESSION_METHOD', 'store'),
 
     // Remove all non-ascii characters from filenames
     'ascii_filenames' => env('ZIPSTREAM_ASCII_FILENAMES', true),

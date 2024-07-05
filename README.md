@@ -25,7 +25,7 @@ The service provider and facade will be automatically wired up.
 #### 2. In a controller method call the `create` method on the `Zip` facade
 
 ```php
-use Zip;
+use STS\ZipStream\Facades\Zip;
 
 class ZipController {
 
@@ -43,9 +43,9 @@ That's it! A `StreamedResponse` will be returned and the zip contents built and 
 
 ## Customize the internal zip path for a file
 
-By default any files you add will be stored in the root of the zip, with their original filenames. 
+By default, any files you add will be stored in the root of the zip, with their original filenames. 
 
-You can customize the filename and even create subfolders within the zip by providing your files array with key/value pairs:
+You can customize the filename and even create sub-folders within the zip by providing your files array with key/value pairs:
 
 ```php
 Zip::create("package.zip", [
@@ -99,7 +99,7 @@ You can stream files from S3 into your zip.
 
 1. Install the `aws/aws-sdk-php` package
 
-2. Setup an AWS IAM user with `s3:GetObject` permission for the S3 bucket and objects you intend to zip up.
+2. Set up an AWS IAM user with `s3:GetObject` permission for the S3 bucket and objects you intend to zip up.
 
 3. Store your credentials as `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_DEFAULT_REGION` in your .env file.
 
@@ -127,7 +127,7 @@ Zip::create("package.zip")->add(
 
 ## Zip size prediction
 
-By default this package attempts to predict the final zip size and sends a `Content-Length` header up front. This means users will see accurate progress on their download, even though the zip is being streamed out as it is created!
+By default, this package attempts to predict the final zip size and sends a `Content-Length` header up front. This means users will see accurate progress on their download, even though the zip is being streamed out as it is created!
 
 This only works if files are not compressed.
 
@@ -156,12 +156,12 @@ foreach($files AS $file) {
 
 ## Configure compression
 
-By default this package uses _no_ compression. Why?
+By default, this package uses _no_ compression. Why?
 
 1) This makes building the zips super fast, and is light on your CPU
 2) This makes it possible to predict the final zip size as mentioned above.
 
-If you want to compress your zip files set `ZIPSTREAM_FILE_METHOD=deflate` in your .env file. Just realize this will disable the `Content-Length` header.
+If you want to compress your zip files set `ZIPSTREAM_COMPRESSION_METHOD=deflate` in your .env file. Just realize this will disable the `Content-Length` header.
 
 ## Save Zip to disk
 
@@ -200,17 +200,16 @@ You might use an internal DB id for your cache name, so that the next time a use
 ## Events
 
 - `STS\ZipStream\Events\ZipStreaming`: Dispatched when a new zip stream begins processing
-- `STS\ZipStream\Events\ZipStreamed`: Dispatched when a zip finishes streaming
-- `STS\ZipStream\Events\ZipSizePredictionFailed`: Fired if the predicted filesize doesn't match the final size. If you have filesize prediction enabled it's a good idea to listen for this event and log it, since that might mean the zip download failed or was corrupt for your user. 
+- `STS\ZipStream\Events\ZipStreamed`: Dispatched when a zip finishes streaming 
 
 ## Filename sanitization
 
-By default this package will try to translate any non-ascii character in filename or folder's name to ascii. For example, if your filename is `中文_にほんご_Ч_Ɯ_☺_someascii.txt`. It will become `__C___someascii.txt` using Laravel's `Str::ascii($path)`.
+By default, this package will try to translate any non-ascii character in filename or folder's name to ascii. For example, if your filename is `中文_にほんご_Ч_Ɯ_☺_someascii.txt`. It will become `__C___someascii.txt` using Laravel's `Str::ascii($path)`.
 
 If you need to preserve non-ascii characters, you can disable this feature with an `.env` setting:
 
 ```env
-ZIPSTREAM_FILE_SANITIZE=false
+ZIPSTREAM_ASCII_FILENAMES=false
 ```
 
 ## License

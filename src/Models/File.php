@@ -136,7 +136,11 @@ abstract class File implements FileContract
 
     public function compressionMethod()
     {
-        return Arr::get($this->options, 'compressionMethod', config('zipstream.compression_method', CompressionMethod::STORE));
+        $default = config('zipstream.compression_method') === 'deflate'
+            ? CompressionMethod::DEFLATE
+            : CompressionMethod::STORE;
+
+        return Arr::get($this->options, 'compressionMethod', $default);
     }
 
     public function prepare(ZipStream $zip): void

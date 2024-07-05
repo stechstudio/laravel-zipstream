@@ -147,6 +147,7 @@ class Builder implements Responsable
     public function canPredictZipSize(): bool
     {
         return config('zipstream.predict_size')
+            && config('zipstream.compression_method') === 'store'
             && $this->queue->every->canPredictZipDataSize();
     }
 
