@@ -6,6 +6,7 @@ use Illuminate\Support\Arr;
 use Psr\Http\Message\StreamInterface;
 use Illuminate\Support\Str;
 use STS\ZipStream\Contracts\FileContract;
+use STS\ZipStream\OutputStream;
 use ZipStream\CompressionMethod;
 use ZipStream\ZipStream;
 
@@ -100,7 +101,7 @@ abstract class File implements FileContract
 
     abstract protected function buildReadableStream(): StreamInterface;
 
-    abstract protected function buildWritableStream(): StreamInterface;
+    abstract protected function buildWritableStream(): OutputStream;
 
     public function getFilesize(): int
     {

@@ -7,6 +7,7 @@ use Aws\S3\S3Client;
 use Aws\S3\S3UriParser;
 use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\StreamInterface;
+use STS\ZipStream\OutputStream;
 
 class S3File extends File
 {
@@ -55,11 +56,11 @@ class S3File extends File
         return Utils::streamFor(fopen($this->getSource(), 'r'));
     }
 
-    protected function buildWritableStream(): StreamInterface
+    protected function buildWritableStream(): OutputStream
     {
         $this->getS3Client()->registerStreamWrapper();
 
-        return Utils::streamFor(fopen($this->getSource(), 'w'));
+        return new OutputStream(fopen($this->getSource(), 'w'));
     }
 
     public function canPredictZipDataSize(): bool

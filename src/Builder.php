@@ -2,7 +2,6 @@
 
 namespace STS\ZipStream;
 
-use GuzzleHttp\Psr7\Utils;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -13,7 +12,6 @@ use STS\ZipStream\Events\ZipStreaming;
 use STS\ZipStream\Models\File;
 use STS\ZipStream\Models\TempFile;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use ZipStream\CompressionMethod;
 use ZipStream\OperationMode;
 use ZipStream\ZipStream;
 
@@ -27,7 +25,7 @@ class Builder implements Responsable
 
     protected Collection $queue;
 
-    protected StreamInterface $outputStream;
+    protected OutputStream $outputStream;
 
     protected StreamInterface $cacheOutputStream;
 
@@ -51,7 +49,7 @@ class Builder implements Responsable
 
     public function setName(?string $name): self
     {
-        $this->outputName = $name;
+        $this->outputName = Str::finish($name, ".zip");
 
         return $this;
     }
@@ -101,7 +99,11 @@ class Builder implements Responsable
     protected function getOutputStream(): StreamInterface
     {
         if (!isset($this->outputStream)) {
-            $this->outputStream = Utils::streamFor(fopen('php://output', 'wb'));
+            $this->outputStream = new OutputStream(fopen('php://output', 'wb'));
+        }
+
+        if(isset($this->cacheOutputStream)) {
+            $this->outputStream->cacheTo($this->cacheOutputStream);
         }
 
         return $this->outputStream;
@@ -135,9 +137,9 @@ class Builder implements Responsable
             $size = $zip->finish();
         }
 
-//        if ($this->cacheOutputStream) {
-//            $this->cacheOutputStream->close();
-//        }
+        if (isset($this->cacheOutputStream)) {
+            $this->cacheOutputStream->close();
+        }
 
         event(new ZipStreamed($this, $zip, $size));
 

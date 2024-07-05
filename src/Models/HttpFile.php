@@ -5,6 +5,7 @@ namespace STS\ZipStream\Models;
 use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\StreamInterface;
 use STS\ZipStream\Exceptions\NotWritableException;
+use STS\ZipStream\OutputStream;
 
 class HttpFile extends File
 {
@@ -32,7 +33,7 @@ class HttpFile extends File
         return Utils::streamFor(fopen($this->getSource(), 'r'));
     }
 
-    protected function buildWritableStream(): StreamInterface
+    protected function buildWritableStream(): OutputStream
     {
         throw new NotWritableException();
     }

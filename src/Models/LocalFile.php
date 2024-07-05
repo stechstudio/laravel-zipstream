@@ -4,6 +4,7 @@ namespace STS\ZipStream\Models;
 
 use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\StreamInterface;
+use STS\ZipStream\OutputStream;
 
 class LocalFile extends File
 {
@@ -17,13 +18,13 @@ class LocalFile extends File
         return Utils::streamFor(fopen($this->getSource(), 'r'));
     }
 
-    protected function buildWritableStream(): StreamInterface
+    protected function buildWritableStream(): OutputStream
     {
         if(!is_dir(dirname($this->getSource()))) {
             mkdir(dirname($this->getSource()), 0777, true);
         }
 
-        return Utils::streamFor(fopen($this->getSource(), 'w'));
+        return new OutputStream(fopen($this->getSource(), 'w'));
     }
 
     public function canPredictZipDataSize(): bool
