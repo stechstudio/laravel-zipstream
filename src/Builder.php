@@ -60,6 +60,11 @@ class Builder implements Responsable
         return $this;
     }
 
+    public function has($zipPath): bool
+    {
+        return $this->queue->has(trim($zipPath, '/'));
+    }
+
     public function add($source, ?string $zipPath = null): self
     {
         if (!$source instanceof FileContract) {
