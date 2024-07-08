@@ -91,6 +91,16 @@ Zip::create("package.zip")
     ->addRaw("...file contents...", "hello.txt");
 ```
 
+## Add from storage disk
+
+You can add files from a storage disk. Use `addFromDisk` and provide the disk name or disk instance as the first argument:
+
+```php
+Zip::create("package.zip")
+    ->addFromDisk("local", "file.txt", "My File.txt")
+    ->addFromDisk(Storage::disk("tmp"), "important.txt")
+```
+
 ## Support for S3
 
 ### Install AWS sdk and configure S3
@@ -125,6 +135,13 @@ Zip::create("package.zip")->add(
 );
 ```
 
+Instead of specifying an absolute `s3://` path, you can use `addFromDisk` and specify a disk that uses the `s3` driver:
+
+```php
+Zip::create("package.zip")
+    ->addFromDisk("s3", "object.pdf", "Something.pdf");
+```
+
 ## Specify your own filesizes
 
 It can be expensive retrieving filesizes for some file sources such as S3 or HTTP. These require dedicated calls, and can add up to a lot of time if you are zipping up many files. If you store filesizes in your database and have them available, you can drastically improve performance by providing filesizes when you add files. You'll need to make your own File models instead of adding paths directly to the zip.
@@ -146,26 +163,13 @@ foreach($files AS $file) {
 }
 ```
 
-## Add files from Storage disks
-
-You can add files from Laravel's `Storage` facade. Use `addFromDisk` and provide the disk name as the first argument:
+Or if you are adding from an S3 disk:
 
 ```php
-Zip::create("package.zip")
-    ->addFromDisk("s3", "object.pdf", "Something.pdf")
-    ->addFromDisk("local", "file.txt", "Local File.txt");
-```
-
-And to include the filesize up front for an S3 file:
-
-```php
-Zip::create("package.zip")
-    ->add(
-        File::makeFromDisk("s3", "object.pdf", "Something.pdf")->setFilesize(12345)
-    );
-```
-
-Only disks that use the `local` or `s3` drivers are supported at this time.
+$zip->add(
+    File::makeFromDisk('s3', $file->key, $file->name)->setFilesize($file->size)
+);
+````
 
 ## Zip size prediction
 

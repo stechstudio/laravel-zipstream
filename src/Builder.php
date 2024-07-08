@@ -131,6 +131,11 @@ class Builder implements Responsable
         return $this;
     }
 
+    public function cacheToDisk($disk, $output): self
+    {
+        return $this->cache(File::makeWriteableFromDisk($disk, $output));
+    }
+
     public function saveTo($output): int
     {
         $this->outputStream = match (true) {
@@ -142,6 +147,11 @@ class Builder implements Responsable
         };
 
         return $this->process();
+    }
+
+    public function saveToDisk($disk, $path): int
+    {
+        return $this->saveTo(File::makeWriteableFromDisk($disk, Str::finish($path, "/").$this->getOutputName()));
     }
 
     public function process(): int

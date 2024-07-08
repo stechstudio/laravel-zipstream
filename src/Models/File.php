@@ -81,13 +81,30 @@ abstract class File implements FileContract
         throw new UnsupportedSourceDiskException("Unsupported disk type");
     }
 
-    public static function makeWriteable(string $source, ?string $zipPath = null): S3File|LocalFile
+    public static function makeWriteable(string $source): S3File|LocalFile
     {
         if (Str::startsWith($source, "s3://")) {
-            return new S3File($source, $zipPath);
+            return new S3File($source);
         }
 
-        return new LocalFile($source, $zipPath);
+        return new LocalFile($source);
+    }
+
+    public static function makeWriteableFromDisk($disk, string $source): S3File|LocalFile
+    {
+        if(!$disk instanceof FilesystemAdapter) {
+            $disk = Storage::disk($disk);
+        }
+
+        if($disk instanceof AwsS3V3Adapter) {
+            return S3File::make(
+                "s3://" . Arr::get($disk->getConfig(), "bucket") . "/" . $disk->path($source)
+            )->setS3Client($disk->getClient());
+        }
+
+        return new LocalFile(
+            $disk->path($source)
+        );
     }
 
     public function getName(): string

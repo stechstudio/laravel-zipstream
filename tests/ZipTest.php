@@ -114,4 +114,28 @@ class ZipTest extends TestCase
         $this->assertTrue($zip->has("subfolder/test2.txt"));
         $this->assertTrue($zip->has("/subfolder/test2.txt"));
     }
+
+    public function testSaveToDisk()
+    {
+        config([
+            'filesystems.disks.tmp' => [
+                'driver' => 'local',
+                'root' => '/tmp',
+                'prefix' => 'my-prefix',
+            ],
+        ]);
+
+        $testrun = microtime();
+        file_put_contents("/tmp/test1.txt", "this is the first test file for test run $testrun");
+        file_put_contents("/tmp/test2.txt", "this is the second test file for test run $testrun");
+
+        /** @var Builder $zip */
+        $zip = Zip::create("test.zip", ["/tmp/test1.txt", "/tmp/test2.txt"]);
+
+        $folder = Str::random();
+        $zip->saveToDisk('tmp', $folder);
+
+        $this->assertTrue(file_exists("/tmp/my-prefix/$folder/test.zip"));
+        unlink("/tmp/my-prefix/$folder/test.zip");
+    }
 }
