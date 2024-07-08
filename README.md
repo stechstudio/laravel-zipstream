@@ -208,6 +208,14 @@ Zip::create("package.zip")
     ->saveTo("s3://bucket-name/path/to/folder");
 ```
 
+Or you can save to a disk:
+
+```php
+Zip::create("package.zip")
+    // ... add files ...
+    ->saveToDisk("s3", "folder");
+```
+
 ## Caching zip while still streaming download
 
 What if you have a lot of users requesting the same zip payload? It might be nice to stream out the zip while _also_ caching it to disk for the future.
@@ -218,6 +226,14 @@ Use the `cache` method to provide a cache path. Note this should be the entire p
 Zip::create("package.zip")
     // ... add files ...
     ->cache("/path/to/folder/some-unique-cache-name.zip");
+```
+
+Or you can cache to a disk:
+
+```php
+Zip::create("package.zip")
+    // ... add files ...
+    ->cacheToDisk("s3", "folder/some-unique-cache-name.zip");
 ```
 
 You might use an internal DB id for your cache name, so that the next time a user requests a zip download you can determine if one is already built and just hand it back.
