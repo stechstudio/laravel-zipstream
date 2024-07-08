@@ -74,4 +74,36 @@ class FileTest extends TestCase
         config(['zipstream.ascii_filenames' => false]);
         $this->assertEquals("ϩtrÂͶğƎ♡.txt", $file->getZipPath());
     }
+
+    public function testFromLocalDisk()
+    {
+        config([
+            'filesystems.disks.tmp' => [
+                'driver' => 'local',
+                'root' => '/tmp',
+                'prefix' => 'my-prefix',
+            ],
+        ]);
+
+        $file = File::makeFromDisk('tmp', 'test.txt');
+
+        $this->assertInstanceOf(LocalFile::class, $file);
+        $this->assertEquals('/tmp/my-prefix/test.txt', $file->getSource());
+    }
+
+    public function testFromS3Disk()
+    {
+        config([
+            'filesystems.disks.s3' => [
+                'driver' => 's3',
+                "bucket" => "my-test-bucket",
+                "prefix" => "my-prefix"
+                ]
+        ]);
+
+        $file = File::makeFromDisk('s3', 'test.txt');
+
+        $this->assertInstanceOf(S3File::class, $file);
+        $this->assertEquals('s3://my-test-bucket/my-prefix/test.txt', $file->getSource());
+    }
 }

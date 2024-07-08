@@ -79,6 +79,17 @@ class Builder implements Responsable
         return $this;
     }
 
+    public function addFromDisk($disk, $source, ?string $zipPath): self
+    {
+        $source = File::makeFromDisk($disk, $source, $zipPath);
+
+        if (!$this->queue->has($source->getZipPath())) {
+            $this->queue->put($source->getZipPath(), $source);
+        }
+
+        return $this;
+    }
+
     public function addRaw($content, string $zipPath): self
     {
         return $this->add(new TempFile($content, $zipPath));

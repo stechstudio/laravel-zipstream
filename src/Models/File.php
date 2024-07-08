@@ -2,10 +2,15 @@
 
 namespace STS\ZipStream\Models;
 
+use Illuminate\Filesystem\AwsS3V3Adapter;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Storage;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Http\Message\StreamInterface;
 use Illuminate\Support\Str;
 use STS\ZipStream\Contracts\FileContract;
+use STS\ZipStream\Exceptions\UnsupportedSourceDiskException;
 use STS\ZipStream\OutputStream;
 use ZipStream\CompressionMethod;
 use ZipStream\ZipStream;
@@ -48,6 +53,32 @@ abstract class File implements FileContract
         }
 
         return new TempFile($source, $zipPath);
+    }
+
+    /**
+     * @throws UnsupportedSourceDiskException
+     */
+    public static function makeFromDisk($disk, string $source, ?string $zipPath = null): FileContract
+    {
+        if(!$disk instanceof FilesystemAdapter) {
+            $disk = Storage::disk($disk);
+        }
+
+        if($disk instanceof AwsS3V3Adapter) {
+            return S3File::make(
+                "s3://" . Arr::get($disk->getConfig(), "bucket") . "/" . $disk->path($source),
+                $zipPath
+            )->setS3Client($disk->getClient());
+        }
+
+        if($disk->getAdapter() instanceof LocalFilesystemAdapter) {
+            return new LocalFile(
+                $disk->path($source),
+                $zipPath
+            );
+        }
+
+        throw new UnsupportedSourceDiskException("Unsupported disk type");
     }
 
     public static function makeWriteable(string $source, ?string $zipPath = null): S3File|LocalFile
