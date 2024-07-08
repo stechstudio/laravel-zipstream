@@ -2,6 +2,7 @@
 
 namespace STS\ZipStream;
 
+use Closure;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -31,6 +32,8 @@ class Builder implements Responsable
     protected OutputStream $outputStream;
 
     protected StreamInterface $cacheOutputStream;
+
+    protected Closure $afterProcessing;
 
     public function __construct(array $files = [])
     {
@@ -112,19 +115,6 @@ class Builder implements Responsable
         return $this;
     }
 
-    protected function getOutputStream(): StreamInterface
-    {
-        if (!isset($this->outputStream)) {
-            $this->outputStream = new OutputStream(fopen('php://output', 'wb'));
-        }
-
-        if (isset($this->cacheOutputStream)) {
-            $this->outputStream->cacheTo($this->cacheOutputStream);
-        }
-
-        return $this->outputStream;
-    }
-
     public function saveTo($output): int
     {
         $this->outputStream = match (true) {
@@ -163,7 +153,18 @@ class Builder implements Responsable
 
         event(new ZipStreamed($this, $zip, $size));
 
+        if (isset($this->afterProcessing)) {
+            ($this->afterProcessing)($this, $zip, $size);
+        }
+
         return $size;
+    }
+
+    public function then(Closure $callback): self
+    {
+        $this->afterProcessing = $callback;
+
+        return $this;
     }
 
     public function canPredictZipSize(): bool
@@ -217,5 +218,18 @@ class Builder implements Responsable
         $this->queue->each->prepare($zip);
 
         return $zip;
+    }
+
+    protected function getOutputStream(): StreamInterface
+    {
+        if (!isset($this->outputStream)) {
+            $this->outputStream = new OutputStream(fopen('php://output', 'wb'));
+        }
+
+        if (isset($this->cacheOutputStream)) {
+            $this->outputStream->cacheTo($this->cacheOutputStream);
+        }
+
+        return $this->outputStream;
     }
 }

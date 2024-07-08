@@ -73,4 +73,26 @@ class ZipTest extends TestCase
 
         unlink("$dir/test.zip");
     }
+
+    public function testAfterProcessingCallback()
+    {
+        $testrun = microtime();
+        file_put_contents("/tmp/test1.txt", "this is the first test file for test run $testrun");
+        file_put_contents("/tmp/test2.txt", "this is the second test file for test run $testrun");
+
+        /** @var Builder $zip */
+        $zip = Zip::create("test.zip", ["/tmp/test1.txt", "/tmp/test2.txt"]);
+        $result = null;
+        $zip->then(function($builder, $zip, $size) use(&$result) {
+            $result = "Zip finished streaming with a total of $size bytes";
+        });
+
+        $this->assertNull($result);
+
+        $dir = "/tmp/" . Str::random();
+        $zip->saveTo($dir);
+
+        $this->assertEquals("Zip finished streaming with a total of " . filesize("$dir/test.zip") . " bytes", $result);
+        unlink("$dir/test.zip");
+    }
 }
