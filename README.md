@@ -142,6 +142,8 @@ Zip::create("package.zip")
     ->addFromDisk("s3", "object.pdf", "Something.pdf");
 ```
 
+In this case the S3 client from the storage disk will be used. 
+
 ## Specify your own filesizes
 
 It can be expensive retrieving filesizes for some file sources such as S3 or HTTP. These require dedicated calls, and can add up to a lot of time if you are zipping up many files. If you store filesizes in your database and have them available, you can drastically improve performance by providing filesizes when you add files. You'll need to make your own File models instead of adding paths directly to the zip.
