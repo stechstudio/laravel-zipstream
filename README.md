@@ -148,7 +148,7 @@ foreach($files AS $file) {
 
 ## Add files from Storage disks
 
-You can add files from Laravel's `Storage` facade. Just provide the disk name as the first part of the path:
+You can add files from Laravel's `Storage` facade. Use `addFromDisk` and provide the disk name as the first argument:
 
 ```php
 Zip::create("package.zip")
