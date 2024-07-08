@@ -125,26 +125,6 @@ Zip::create("package.zip")->add(
 );
 ```
 
-## Add files from Storage disks
-
-You can add files from Laravel's `Storage` facade. Just provide the disk name as the first part of the path:
-
-```php
-Zip::create("package.zip")
-    ->addFromDisk("s3", "object.pdf", "Something.pdf")
-    ->addFromDisk("local", "file.txt", "Local File.txt");
-```
-
-Only disks that use the `local` or `s3` drivers are supported at this time.
-
-## Zip size prediction
-
-By default, this package attempts to predict the final zip size and sends a `Content-Length` header up front. This means users will see accurate progress on their download, even though the zip is being streamed out as it is created!
-
-This only works if files are not compressed.
-
-If you have issues with the zip size prediction you can disable it with `ZIPSTREAM_PREDICT_SIZE=false` in your .env file.
-
 ## Specify your own filesizes
 
 It can be expensive retrieving filesizes for some file sources such as S3 or HTTP. These require dedicated calls, and can add up to a lot of time if you are zipping up many files. If you store filesizes in your database and have them available, you can drastically improve performance by providing filesizes when you add files. You'll need to make your own File models instead of adding paths directly to the zip.
@@ -165,6 +145,35 @@ foreach($files AS $file) {
     );
 }
 ```
+
+## Add files from Storage disks
+
+You can add files from Laravel's `Storage` facade. Just provide the disk name as the first part of the path:
+
+```php
+Zip::create("package.zip")
+    ->addFromDisk("s3", "object.pdf", "Something.pdf")
+    ->addFromDisk("local", "file.txt", "Local File.txt");
+```
+
+And to include the filesize up front for an S3 file:
+
+```php
+Zip::create("package.zip")
+    ->add(
+        File::makeFromDisk("s3", "object.pdf", "Something.pdf")->setFilesize(12345)
+    );
+```
+
+Only disks that use the `local` or `s3` drivers are supported at this time.
+
+## Zip size prediction
+
+By default, this package attempts to predict the final zip size and sends a `Content-Length` header up front. This means users will see accurate progress on their download, even though the zip is being streamed out as it is created!
+
+This only works if files are not compressed.
+
+If you have issues with the zip size prediction you can disable it with `ZIPSTREAM_PREDICT_SIZE=false` in your .env file.
 
 ## Configure compression
 
