@@ -96,9 +96,10 @@ class FileTest extends TestCase
         config([
             'filesystems.disks.s3' => [
                 'driver' => 's3',
-                "bucket" => "my-test-bucket",
-                "prefix" => "my-prefix"
-                ]
+                'bucket' => 'my-test-bucket',
+                'region' => 'us-east-1',
+                'prefix' => 'my-prefix'
+            ]
         ]);
 
         $file = File::makeFromDisk('s3', 'test.txt');
