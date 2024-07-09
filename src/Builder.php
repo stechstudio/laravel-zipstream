@@ -224,7 +224,7 @@ class Builder implements Responsable
     {
         return new StreamedResponse(function () {
             $this->process();
-        }, 200, ['X-Accel-Buffering' => 'no']);
+        }, 200);
     }
 
     public function toResponse($request): StreamedResponse
