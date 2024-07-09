@@ -197,13 +197,18 @@ abstract class File implements FileContract
         return $this;
     }
 
+    public function getOption($name, $default = null)
+    {
+        return Arr::get($this->options, $name, $default);
+    }
+
     public function compressionMethod()
     {
         $default = config('zipstream.compression_method') === 'deflate'
             ? CompressionMethod::DEFLATE
             : CompressionMethod::STORE;
 
-        return Arr::get($this->options, 'compressionMethod', $default);
+        return $this->getOption('compressionMethod', $default);
     }
 
     public function prepare(ZipStream $zip): void
