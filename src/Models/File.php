@@ -2,54 +2,43 @@
 
 namespace STS\ZipStream\Models;
 
+use Illuminate\Filesystem\AwsS3V3Adapter;
+use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Storage;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use Psr\Http\Message\StreamInterface;
 use Illuminate\Support\Str;
 use STS\ZipStream\Contracts\FileContract;
-use STS\ZipStream\ZipStream;
-use STS\ZipStream\ZipStreamFile;
-use ZipStream\Option\Archive as ArchiveOptions;
-use ZipStream\Option\File as FileOptions;
-use ZipStream\Option\Method;
+use STS\ZipStream\Exceptions\UnsupportedSourceDiskException;
+use STS\ZipStream\OutputStream;
+use ZipStream\CompressionMethod;
+use ZipStream\ZipStream;
 
 abstract class File implements FileContract
 {
-    /** @var string */
-    protected $source;
+    protected string $source;
 
-    /** @var string */
-    protected $zipPath;
+    protected string $zipPath;
 
-    /** @var int */
-    protected $filesize;
+    protected string $comment = '';
 
-    /** @var StreamInterface */
-    protected $readStream;
+    protected array $options = [];
 
-    /** @var StreamInterface */
-    protected $writeStream;
+    protected int $filesize;
 
-    /** @var FileOptions */
-    protected $options;
+    protected StreamInterface $readStream;
 
-    /**
-     * @param string $source
-     * @param string|null $zipPath
-     * @param FileOptions|null $options
-     */
-    public function __construct(string $source, ?string $zipPath = null, ?FileOptions $options = null)
+    protected OutputStream $writeStream;
+
+    public function __construct(string $source, ?string $zipPath = null, array $options = [])
     {
         $this->source = $source;
         $this->zipPath = $zipPath ?? $this->getDefaultZipPath();
-        $this->options = $options ?? app(FileOptions::class);
+        $this->options = $options;
     }
 
-    /**
-     * @param string $source
-     * @param string|null $zipPath
-     *
-     * @return FileContract
-     */
-    public static function make(string $source, ?string $zipPath = null)
+    public static function make(string $source, ?string $zipPath = null): FileContract
     {
         if (Str::startsWith($source, "s3://")) {
             return new S3File($source, $zipPath);
@@ -66,140 +55,170 @@ abstract class File implements FileContract
         return new TempFile($source, $zipPath);
     }
 
-    public static function makeWriteable(string $source, ?string $zipPath = null)
+    /**
+     * @throws UnsupportedSourceDiskException
+     */
+    public static function makeFromDisk($disk, string $source, ?string $zipPath = null): FileContract
     {
-        if (Str::startsWith($source, "s3://")) {
-            return new S3File($source, $zipPath);
+        if(!$disk instanceof FilesystemAdapter) {
+            $disk = Storage::disk($disk);
         }
 
-        return new LocalFile($source, $zipPath);
+        if($disk instanceof AwsS3V3Adapter) {
+            return S3File::make(
+                "s3://" . Arr::get($disk->getConfig(), "bucket") . "/" . $disk->path($source),
+                $zipPath
+            )->setS3Client($disk->getClient());
+        }
+
+        if($disk->getAdapter() instanceof LocalFilesystemAdapter) {
+            return new LocalFile(
+                $disk->path($source),
+                $zipPath
+            );
+        }
+
+        throw new UnsupportedSourceDiskException("Unsupported disk type");
     }
 
-    /**
-     * @return string
-     */
+    public static function makeWriteable(string $source): S3File|LocalFile
+    {
+        if (Str::startsWith($source, "s3://")) {
+            return new S3File($source);
+        }
+
+        return new LocalFile($source);
+    }
+
+    public static function makeWriteableFromDisk($disk, string $source): S3File|LocalFile
+    {
+        if(!$disk instanceof FilesystemAdapter) {
+            $disk = Storage::disk($disk);
+        }
+
+        if($disk instanceof AwsS3V3Adapter) {
+            return S3File::make(
+                "s3://" . Arr::get($disk->getConfig(), "bucket") . "/" . $disk->path($source)
+            )->setS3Client($disk->getClient());
+        }
+
+        return new LocalFile(
+            $disk->path($source)
+        );
+    }
+
     public function getName(): string
     {
         return basename($this->getZipPath());
     }
 
-    /**
-     * @return string
-     */
     public function getSource(): string
     {
         return $this->source;
     }
 
-    /**
-     * @return string
-     */
-    protected function getDefaultZipPath()
+    protected function getDefaultZipPath(): string
     {
         return basename($this->getSource());
     }
 
-    /**
-     * @return string
-     */
     public function getZipPath(): string
     {
         $path = ltrim(preg_replace('|/{2,}|', '/', $this->zipPath), '/');
 
-        return config('zipstream.file.sanitize')
+        return config('zipstream.ascii_filenames')
             ? Str::ascii($path)
             : $path;
     }
 
-    /**
-     * @return StreamInterface
-     */
+    public function setComment(string $comment): self
+    {
+        $this->comment = $comment;
+
+        return $this;
+    }
+
+    public function getComment(): string
+    {
+        return $this->comment;
+    }
+
     public function getReadableStream(): StreamInterface
     {
-        if (!$this->readStream) {
+        if (!isset($this->readStream)) {
             $this->readStream = $this->buildReadableStream();
         }
 
         return $this->readStream;
     }
 
-    /**
-     * @return StreamInterface
-     */
-    public function getWritableStream(): StreamInterface
+    public function getWritableStream(): OutputStream
     {
-        if (!$this->writeStream) {
+        if (!isset($this->writeStream)) {
             $this->writeStream = $this->buildWritableStream();
         }
 
         return $this->writeStream;
     }
 
-    /**
-     * @return StreamInterface
-     */
     abstract protected function buildReadableStream(): StreamInterface;
 
-    /**
-     * @return StreamInterface
-     */
-    abstract protected function buildWritableStream(): StreamInterface;
+    abstract protected function buildWritableStream(): OutputStream;
 
-    /**
-     * @return int
-     */
     public function getFilesize(): int
     {
-        if (!$this->filesize) {
+        if (!isset($this->filesize)) {
             $this->filesize = $this->calculateFilesize();
         }
 
         return $this->filesize;
     }
 
-    public function setFilesize(int $filesize)
+    public function setFilesize(int $filesize): self
     {
         $this->filesize = $filesize;
 
         return $this;
     }
 
-    /**
-     * @return int
-     */
+    abstract public function canPredictZipDataSize(): bool;
+
     abstract protected function calculateFilesize(): int;
 
-    /**
-     * @return string
-     */
     public function getFingerprint(): string
     {
-        return md5($this->getSource() . $this->getZipPath() . $this->getFilesize());
+        return md5($this->getSource().$this->getZipPath().$this->getFilesize().$this->getComment());
     }
 
-    /**
-     * @return FileOptions
-     */
-    public function getOptions(): FileOptions
+    public function setOption($name, $value): static
     {
-        return $this->options;
+        $this->options[$name] = $value;
+
+        return $this;
     }
 
-    /**
-     * return bool
-     */
-    public function canPredictZipDataSize(): bool
+    public function getOption($name, $default = null)
     {
-        return $this->options->getMethod() == Method::STORE();
+        return Arr::get($this->options, $name, $default);
     }
 
-    /**
-     * @param ZipStream $zip
-     *
-     * @return ZipStreamFile
-     */
-    public function toZipStreamFile(ZipStream $zip): ZipStreamFile
+    public function compressionMethod()
     {
-        return new ZipStreamFile($zip, $this);
+        $default = config('zipstream.compression_method') === 'deflate'
+            ? CompressionMethod::DEFLATE
+            : CompressionMethod::STORE;
+
+        return $this->getOption('compressionMethod', $default);
+    }
+
+    public function prepare(ZipStream $zip): void
+    {
+        $zip->addFileFromCallback(
+            fileName: $this->getZipPath(),
+            callback: fn () => $this->getReadableStream(),
+            comment: $this->getComment(),
+            compressionMethod: $this->compressionMethod(),
+            exactSize: $this->getFilesize()
+        );
     }
 }

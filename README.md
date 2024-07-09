@@ -25,7 +25,7 @@ The service provider and facade will be automatically wired up.
 #### 2. In a controller method call the `create` method on the `Zip` facade
 
 ```php
-use Zip;
+use STS\ZipStream\Facades\Zip;
 
 class ZipController {
 
@@ -43,9 +43,9 @@ That's it! A `StreamedResponse` will be returned and the zip contents built and 
 
 ## Customize the internal zip path for a file
 
-By default any files you add will be stored in the root of the zip, with their original filenames. 
+By default, any files you add will be stored in the root of the zip, with their original filenames. 
 
-You can customize the filename and even create subfolders within the zip by providing your files array with key/value pairs:
+You can customize the filename and even create sub-folders within the zip by providing your files array with key/value pairs:
 
 ```php
 Zip::create("package.zip", [
@@ -91,6 +91,16 @@ Zip::create("package.zip")
     ->addRaw("...file contents...", "hello.txt");
 ```
 
+## Add from storage disk
+
+You can add files from a storage disk. Use `addFromDisk` and provide the disk name or disk instance as the first argument:
+
+```php
+Zip::create("package.zip")
+    ->addFromDisk("local", "file.txt", "My File.txt")
+    ->addFromDisk(Storage::disk("tmp"), "important.txt")
+```
+
 ## Support for S3
 
 ### Install AWS sdk and configure S3
@@ -99,7 +109,7 @@ You can stream files from S3 into your zip.
 
 1. Install the `aws/aws-sdk-php` package
 
-2. Setup an AWS IAM user with `s3:GetObject` permission for the S3 bucket and objects you intend to zip up.
+2. Set up an AWS IAM user with `s3:GetObject` permission for the S3 bucket and objects you intend to zip up.
 
 3. Store your credentials as `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_DEFAULT_REGION` in your .env file.
 
@@ -125,13 +135,14 @@ Zip::create("package.zip")->add(
 );
 ```
 
-## Zip size prediction
+Instead of specifying an absolute `s3://` path, you can use `addFromDisk` and specify a disk that uses the `s3` driver:
 
-By default this package attempts to predict the final zip size and sends a `Content-Length` header up front. This means users will see accurate progress on their download, even though the zip is being streamed out as it is created!
+```php
+Zip::create("package.zip")
+    ->addFromDisk("s3", "object.pdf", "Something.pdf");
+```
 
-This only works if files are not compressed.
-
-If you have issues with the zip size prediction you can disable it with `ZIPSTREAM_PREDICT_SIZE=false` in your .env file.
+In this case the S3 client from the storage disk will be used. 
 
 ## Specify your own filesizes
 
@@ -154,14 +165,30 @@ foreach($files AS $file) {
 }
 ```
 
+Or if you are adding from an S3 disk:
+
+```php
+$zip->add(
+    File::makeFromDisk('s3', $file->key, $file->name)->setFilesize($file->size)
+);
+````
+
+## Zip size prediction
+
+By default, this package attempts to predict the final zip size and sends a `Content-Length` header up front. This means users will see accurate progress on their download, even though the zip is being streamed out as it is created!
+
+This only works if files are not compressed.
+
+If you have issues with the zip size prediction you can disable it with `ZIPSTREAM_PREDICT_SIZE=false` in your .env file.
+
 ## Configure compression
 
-By default this package uses _no_ compression. Why?
+By default, this package uses _no_ compression. Why?
 
 1) This makes building the zips super fast, and is light on your CPU
 2) This makes it possible to predict the final zip size as mentioned above.
 
-If you want to compress your zip files set `ZIPSTREAM_FILE_METHOD=deflate` in your .env file. Just realize this will disable the `Content-Length` header.
+If you want to compress your zip files set `ZIPSTREAM_COMPRESSION_METHOD=deflate` in your .env file. Just realize this will disable the `Content-Length` header.
 
 ## Save Zip to disk
 
@@ -183,6 +210,14 @@ Zip::create("package.zip")
     ->saveTo("s3://bucket-name/path/to/folder");
 ```
 
+Or you can save to a disk:
+
+```php
+Zip::create("package.zip")
+    // ... add files ...
+    ->saveToDisk("s3", "folder");
+```
+
 ## Caching zip while still streaming download
 
 What if you have a lot of users requesting the same zip payload? It might be nice to stream out the zip while _also_ caching it to disk for the future.
@@ -195,22 +230,29 @@ Zip::create("package.zip")
     ->cache("/path/to/folder/some-unique-cache-name.zip");
 ```
 
+Or you can cache to a disk:
+
+```php
+Zip::create("package.zip")
+    // ... add files ...
+    ->cacheToDisk("s3", "folder/some-unique-cache-name.zip");
+```
+
 You might use an internal DB id for your cache name, so that the next time a user requests a zip download you can determine if one is already built and just hand it back.
 
 ## Events
 
 - `STS\ZipStream\Events\ZipStreaming`: Dispatched when a new zip stream begins processing
-- `STS\ZipStream\Events\ZipStreamed`: Dispatched when a zip finishes streaming
-- `STS\ZipStream\Events\ZipSizePredictionFailed`: Fired if the predicted filesize doesn't match the final size. If you have filesize prediction enabled it's a good idea to listen for this event and log it, since that might mean the zip download failed or was corrupt for your user. 
+- `STS\ZipStream\Events\ZipStreamed`: Dispatched when a zip finishes streaming 
 
 ## Filename sanitization
 
-By default this package will try to translate any non-ascii character in filename or folder's name to ascii. For example, if your filename is `中文_にほんご_Ч_Ɯ_☺_someascii.txt`. It will become `__C___someascii.txt` using Laravel's `Str::ascii($path)`.
+By default, this package will try to translate any non-ascii character in filename or folder's name to ascii. For example, if your filename is `中文_にほんご_Ч_Ɯ_☺_someascii.txt`. It will become `__C___someascii.txt` using Laravel's `Str::ascii($path)`.
 
 If you need to preserve non-ascii characters, you can disable this feature with an `.env` setting:
 
 ```env
-ZIPSTREAM_FILE_SANITIZE=false
+ZIPSTREAM_ASCII_FILENAMES=false
 ```
 
 ## License

@@ -2,11 +2,11 @@
 
 namespace STS\ZipStream\Events;
 
-use STS\ZipStream\ZipStream;
+use STS\ZipStream\ZipStreamOld;
 
 class ZipSizePredictionFailed
 {
-    /** @var ZipStream */
+    /** @var ZipStreamOld */
     public $zip;
 
     /** @var int */
@@ -16,11 +16,11 @@ class ZipSizePredictionFailed
     public $actual;
 
     /**
-     * @param ZipStream $zip
+     * @param ZipStreamOld $zip
      * @param int $expected
      * @param int $actual
      */
-    public function __construct(ZipStream $zip, int $expected, int $actual)
+    public function __construct(ZipStreamOld $zip, int $expected, int $actual)
     {
         $this->zip = $zip;
         $this->expected = $expected;
