@@ -161,6 +161,7 @@ class Builder implements Responsable
         if ($this->canPredictZipSize()) {
             $size = $zip->finish();
             header('Content-Length: '.$size);
+            header('X-Accel-Buffering: no');
 
             event(new ZipStreaming($this, $zip, $size));
 
