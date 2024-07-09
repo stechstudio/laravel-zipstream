@@ -12,6 +12,12 @@ A fast and simple streaming zip file downloader for Laravel.
 - Calculates the zip filesize up front for the `Content-Length` header. The user gets an accurate download time estimate in their browser.
 - Built on top of the excellent [ZipStream-PHP](https://github.com/maennchen/ZipStream-PHP) library.
 
+## Upgrading
+
+Upgrading from version 4? Make sure to look at the release notes for version 5. There are some breaking changes.
+
+https://github.com/stechstudio/laravel-zipstream/releases/tag/5.0
+
 ## Quickstart
 
 #### 1. Install the package
