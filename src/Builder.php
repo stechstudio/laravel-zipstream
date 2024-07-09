@@ -239,6 +239,7 @@ class Builder implements Responsable
             comment: $this->getComment(),
             outputStream: $this->getOutputStream(),
             outputName: $this->getOutputName(),
+            flushOutput: true,
         );
 
         $this->queue->each->prepare($zip);
