@@ -38,7 +38,7 @@ abstract class File implements FileContract
         $this->options = $options;
     }
 
-    public static function make(string $source, ?string $zipPath = null): FileContract
+    public static function make(string $source, ?string $zipPath = null): static
     {
         if (Str::startsWith($source, "s3://")) {
             return new S3File($source, $zipPath);
