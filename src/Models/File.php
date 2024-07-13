@@ -58,7 +58,7 @@ abstract class File implements FileContract
     /**
      * @throws UnsupportedSourceDiskException
      */
-    public static function makeFromDisk($disk, string $source, ?string $zipPath = null): FileContract
+    public static function makeFromDisk($disk, string $source, ?string $zipPath = null): static
     {
         if(!$disk instanceof FilesystemAdapter) {
             $disk = Storage::disk($disk);
