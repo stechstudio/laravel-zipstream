@@ -4,6 +4,7 @@ namespace STS\ZipStream\Tests;
 
 use Orchestra\Testbench\TestCase;
 use STS\ZipStream\Models\File;
+use STS\ZipStream\Models\HttpFile;
 use STS\ZipStream\Models\LocalFile;
 use STS\ZipStream\Models\S3File;
 use STS\ZipStream\Models\TempFile;
@@ -55,6 +56,15 @@ class FileTest extends TestCase
         $this->assertEquals(8, $file->getFilesize());
         $this->assertEquals("hi there", $file->getReadableStream()->getContents());
         $this->assertEquals("test.txt", $file->getZipPath());
+    }
+
+    public function testUrl()
+    {
+        $file = File::make('https://example.com/test.txt');
+
+        $this->assertInstanceOf(HttpFile::class, $file);
+        $this->assertEquals('https://example.com/test.txt', $file->getSource());
+        $this->assertTrue($file->canPredictZipDataSize());
     }
 
     public function testSettingFilesize()
