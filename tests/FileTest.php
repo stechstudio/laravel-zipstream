@@ -60,10 +60,10 @@ class FileTest extends TestCase
 
     public function testUrl()
     {
-        $file = File::make('https://example.com/test.txt');
+        $file = File::make('https://example.com/index.html');
 
         $this->assertInstanceOf(HttpFile::class, $file);
-        $this->assertEquals('https://example.com/test.txt', $file->getSource());
+        $this->assertEquals('https://example.com/index.html', $file->getSource());
         $this->assertTrue($file->canPredictZipDataSize());
     }
 
