@@ -196,6 +196,14 @@ By default, this package uses _no_ compression. Why?
 
 If you want to compress your zip files set `ZIPSTREAM_COMPRESSION_METHOD=deflate` in your .env file. Just realize this will disable the `Content-Length` header.
 
+## Configure conflict strategy
+
+If two or more files are added to the zip with the same zip path, you can use `ZIPSTREAM_CONFLICT_STRATEGY` to configure how the conflict is handled:
+
+- `ZIPSTREAM_CONFLICT_STRATEGY=skip`: Keep the initial file, skip adding the conflicting file (default)
+- `ZIPSTREAM_CONFLICT_STRATEGY=replace`: Keep the latest file, overwrite previous files at the same path
+- `ZIPSTREAM_CONFLICT_STRATEGY=rename`: Append a number to the conflicting file name, e.g. `file.txt` becomes `file_1.txt`
+
 ## Save Zip to disk
 
 Even though the primary goal of this package is to enable zip downloads without saving to disk, there may be times you'd like to generate a zip on disk as well. And you might as well make use of this package to do so.
