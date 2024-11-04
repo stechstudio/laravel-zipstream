@@ -35,13 +35,12 @@ class Queue extends Collection
         $filename = pathinfo($zipPath, PATHINFO_FILENAME);
         $extension = rtrim('.' . pathinfo($zipPath, PATHINFO_EXTENSION), '.');
 
-        $i = 1;
-        $path = ltrim($dirname . DIRECTORY_SEPARATOR . $filename . '_' . $i . $extension, DIRECTORY_SEPARATOR);
+        $i = 0;
 
-        while ($this->has($this->queueKey($path))) {
+        do {
             $i++;
             $path = ltrim($dirname . DIRECTORY_SEPARATOR . $filename . '_' . $i . $extension, DIRECTORY_SEPARATOR);
-        }
+        } while ($this->has($this->queueKey($path)));
 
         return $path;
     }
