@@ -204,6 +204,8 @@ If two or more files are added to the zip with the same zip path, you can use `Z
 - `ZIPSTREAM_CONFLICT_STRATEGY=replace`: Keep the latest file, overwrite previous files at the same path
 - `ZIPSTREAM_CONFLICT_STRATEGY=rename`: Append a number to the conflicting file name, e.g. `file.txt` becomes `file_1.txt`
 
+Note: filenames are compared case-insensitive. `FILE.txt` and `file.TXT` are considered conflicting. If you are working only on a case-sensitive filesystem you can set `ZIPSTREAM_CASE_INSENSITIVE_CONFLICTS=false`. Don't do this if you have Windows users opening your zips!
+
 ## Save Zip to disk
 
 Even though the primary goal of this package is to enable zip downloads without saving to disk, there may be times you'd like to generate a zip on disk as well. And you might as well make use of this package to do so.
