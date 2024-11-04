@@ -11,6 +11,9 @@ return [
     // Remove all non-ascii characters from filenames
     'ascii_filenames' => env('ZIPSTREAM_ASCII_FILENAMES', true),
 
+    // What to do when a file with the same zip path is added twice. Options are 'skip', 'replace', 'rename'
+    'conflict_strategy' => env('ZIPSTREAM_CONFLICT_STRATEGY', 'skip'),
+
     // AWS configs for S3 files
     'aws'     => [
         'credentials'             => [

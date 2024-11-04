@@ -115,6 +115,92 @@ class ZipTest extends TestCase
         $this->assertTrue($zip->has("/subfolder/test2.txt"));
     }
 
+    public function testSkipConflictStrategy()
+    {
+        $testrun = microtime();
+        file_put_contents("/tmp/test1", "this is the first test file for test run $testrun");
+        file_put_contents("/tmp/test2", "this is the second test file for test run $testrun");
+
+        config(['zipstream.conflict_strategy' => 'skip']);
+
+        /** @var Builder $zip */
+        $zip = Zip::create("test.zip");
+        $zip->add("/tmp/test1", "test1.txt");
+        $zip->add("/tmp/test2", "test1.txt");
+
+        // Create a random folder path that doesn't exist, so we know it was created
+        $dir = "/tmp/" . Str::random();
+        $zip->saveTo($dir);
+
+        $this->assertTrue(file_exists("$dir/test.zip"));
+
+		$z = new ZipArchive();
+        $z->open("$dir/test.zip");
+        $this->assertEquals(1, $z->count());
+        $this->assertEquals("this is the first test file for test run $testrun", $z->getFromName("test1.txt"));
+
+        unlink("$dir/test.zip");
+    }
+
+    public function testReplaceConflictStrategy()
+    {
+        $testrun = microtime();
+        file_put_contents("/tmp/test1", "this is the first test file for test run $testrun");
+        file_put_contents("/tmp/test2", "this is the second test file for test run $testrun");
+
+        config(['zipstream.conflict_strategy' => 'replace']);
+
+        /** @var Builder $zip */
+        $zip = Zip::create("test.zip");
+        $zip->add("/tmp/test1", "test1.txt");
+        $zip->add("/tmp/test2", "test1.txt");
+
+        // Create a random folder path that doesn't exist, so we know it was created
+        $dir = "/tmp/" . Str::random();
+        $zip->saveTo($dir);
+
+        $this->assertTrue(file_exists("$dir/test.zip"));
+
+		$z = new ZipArchive();
+        $z->open("$dir/test.zip");
+        $this->assertEquals(1, $z->count());
+        $this->assertEquals("this is the second test file for test run $testrun", $z->getFromName("test1.txt"));
+
+        unlink("$dir/test.zip");
+    }
+
+    public function testRenameConflictStrategy()
+    {
+        $testrun = microtime();
+        file_put_contents("/tmp/test1", "this is the first test file for test run $testrun");
+        file_put_contents("/tmp/test2", "this is the second test file for test run $testrun");
+
+        config(['zipstream.conflict_strategy' => 'rename']);
+
+        /** @var Builder $zip */
+        $zip = Zip::create("test.zip");
+        $zip->add("/tmp/test1", "test1.txt");
+        $zip->add("/tmp/test2", "test1.txt");
+        $zip->add("/tmp/test1", "test");
+        $zip->add("/tmp/test2", "test");
+
+        // Create a random folder path that doesn't exist, so we know it was created
+        $dir = "/tmp/" . Str::random();
+        $zip->saveTo($dir);
+
+        $this->assertTrue(file_exists("$dir/test.zip"));
+
+		$z = new ZipArchive();
+        $z->open("$dir/test.zip");
+        $this->assertEquals(4, $z->count());
+        $this->assertEquals("this is the first test file for test run $testrun", $z->getFromName("test1.txt"));
+        $this->assertEquals("this is the second test file for test run $testrun", $z->getFromName("test1_1.txt"));
+        $this->assertEquals("this is the first test file for test run $testrun", $z->getFromName("test"));
+        $this->assertEquals("this is the second test file for test run $testrun", $z->getFromName("test_1"));
+
+        unlink("$dir/test.zip");
+    }
+
     public function testSaveToDisk()
     {
         config([
