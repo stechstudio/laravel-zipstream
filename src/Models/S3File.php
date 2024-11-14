@@ -46,7 +46,9 @@ class S3File extends File
 
     public function getKey(): string
     {
-        return ltrim(parse_url($this->getSource(), PHP_URL_PATH), "/");
+        $s3AndBucketLength = strlen("s3://{$this->getBucket()}/");
+        $key = substr($this->getSource(), $s3AndBucketLength);
+        return ltrim($key);
     }
 
     protected function buildReadableStream(): StreamInterface
