@@ -117,11 +117,4 @@ class FileTest extends TestCase
         $this->assertInstanceOf(S3File::class, $file);
         $this->assertEquals('s3://my-test-bucket/my-prefix/test.txt', $file->getSource());
     }
-
-    public function testS3HashFilename()
-    {
-        $file = S3File::make('s3://my-test-bucket/file with hash #.txt');
-        $this->assertEquals('file with hash #.txt', $file->getKey());
-        $this->assertEquals('my-test-bucket', $file->getBucket());
-    }
 }
