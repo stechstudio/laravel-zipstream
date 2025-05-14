@@ -17,10 +17,9 @@ class S3File extends File
 
     public function calculateFilesize(): int
     {
-        // We use a separate and immediately discarded stream to get the file
-        // size to avoid prematurely caching the stream to be used for the
-        // actual file body fetching (which could expire depending on the
-        // number and size of files and the connection speeds).
+        // Use a separate, immediately discarded, stream to get the file size
+        // to avoid the main stream from being opened prematurely then timing
+        // out before the file contents can be streamed.
         $stream = $this->buildReadableStream();
         $size = $stream->getSize();
         $stream->close();
