@@ -25,7 +25,11 @@ class S3File extends File
         // Since we don't hold a reference to this stream it will be
         // immediately discarded and the destructor automatically called (to
         // clean up the underlying descriptors).
-        return $this->buildReadableStream()->getSize();
+        $stream = $this->buildReadableStream();
+        $size = $stream->getSize();
+        $stream->close();
+
+        return $size;
     }
 
     public function setS3Client(S3Client $client): self
