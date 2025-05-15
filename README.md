@@ -234,6 +234,9 @@ Zip::create("package.zip")
     ->saveToDisk("s3", "folder");
 ```
 
+> [!WARNING]  
+> S3 has a limit of 5GB when objects are saved using a stream the way we are doing. Saving your zip to S3 will fail if it is over this limit. If this is an issue for your use-case, we recommend saving to local disk first and then separately using the S3 SDK to store the file using multipart.
+
 ## Caching zip while still streaming download
 
 What if you have a lot of users requesting the same zip payload? It might be nice to stream out the zip while _also_ caching it to disk for the future.
