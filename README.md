@@ -148,7 +148,24 @@ Zip::create("package.zip")
     ->addFromDisk("s3", "object.pdf", "Something.pdf");
 ```
 
-In this case the S3 client from the storage disk will be used. 
+In this case the S3 client from the storage disk will be used.
+
+## Support for FTP
+
+You can stream files from an FTP server into your zip. For that, you will need to [configure an FTP disk in your `filesystems.php` file.](https://laravel.com/docs/12.x/filesystem#ftp-driver-configuration)
+
+### Add files to your zip
+
+```php
+Zip::create("package.zip")
+    ->addFromDisk('ftp', 'object.pdf', 'Something.pdf');
+
+\\ OR
+
+$disk = Storage::disk('custom_ftp_disk');
+Zip::create("package.zip")
+    ->addFromDisk($disk, 'object.pdf', 'Something.pdf');
+```
 
 ## Specify your own filesizes
 
