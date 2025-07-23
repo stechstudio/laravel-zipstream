@@ -1,7 +1,5 @@
 <?php
 
-namespace STS\ZipStream\Tests;
-
 use GuzzleHttp\Psr7\BufferStream;
 use Illuminate\Support\Str;
 use STS\ZipStream\Builder;
