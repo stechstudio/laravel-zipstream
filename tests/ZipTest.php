@@ -136,4 +136,32 @@ class ZipTest extends TestCase
         $this->assertTrue(file_exists("/tmp/my-prefix/$folder/test.zip"));
         unlink("/tmp/my-prefix/$folder/test.zip");
     }
+
+    public function testEmptyDirectory()
+    {
+        $testrun = microtime();
+        file_put_contents("/tmp/test1.txt", "this is the first test file for test run $testrun");
+
+        /** @var Builder $zip */
+        $zip = Zip::create("test.zip", ["/tmp/test1.txt"])->addDirectory($directory = Str::random());
+
+        // Create a random folder path that doesn't exist, so we know it was created
+        $dir = "/tmp/" . Str::random();
+        $zip->saveTo($dir);
+
+        $this->assertTrue(file_exists("$dir/test.zip"));
+
+		$z = new ZipArchive();
+        $z->open("$dir/test.zip");
+        $this->assertEquals(2, $z->numFiles);
+        $this->assertNotFalse($z->getFromName($directory . "/"));
+
+        $z->extractTo($dir . "/extracted");
+        $this->assertTrue(file_exists("$dir/extracted/$directory/"));
+        $this->assertTrue(is_dir("$dir/extracted/$directory/"));
+
+        rmdir("$dir/extracted/$directory/");
+        unlink("$dir/extracted/test1.txt");
+        unlink("$dir/test.zip");
+    }
 }

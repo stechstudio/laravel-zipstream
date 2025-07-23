@@ -37,6 +37,8 @@ class Builder implements Responsable
 
     protected Closure $afterProcessing;
 
+    protected array $directories = [];
+
     public function __construct(array $files = [])
     {
         $this->queue = new Queue();
@@ -86,6 +88,13 @@ class Builder implements Responsable
     public function addRaw($content, string $zipPath): self
     {
         return $this->add(new TempFile($content, $zipPath));
+    }
+
+    public function addDirectory(string $name): self
+    {
+        $this->directories[] = $name;
+
+        return $this;
     }
 
     public function setMeta(array $meta): self
@@ -242,6 +251,10 @@ class Builder implements Responsable
         );
 
         $this->queue->each->prepare($zip);
+
+        foreach($this->directories as $directory) {
+            $zip->addDirectory($directory);
+        }
 
         return $zip;
     }
