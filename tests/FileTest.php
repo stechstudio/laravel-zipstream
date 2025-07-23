@@ -1,7 +1,5 @@
 <?php
 
-namespace STS\ZipStream\Tests;
-
 use Orchestra\Testbench\TestCase;
 use STS\ZipStream\Models\File;
 use STS\ZipStream\Models\HttpFile;
