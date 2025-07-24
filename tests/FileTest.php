@@ -1,7 +1,9 @@
 <?php
 
+use Illuminate\Support\Facades\Storage;
 use Orchestra\Testbench\TestCase;
 use STS\ZipStream\Models\File;
+use STS\ZipStream\Models\FtpFile;
 use STS\ZipStream\Models\HttpFile;
 use STS\ZipStream\Models\LocalFile;
 use STS\ZipStream\Models\S3File;
@@ -19,7 +21,10 @@ class FileTest extends TestCase
 
     public function testMake()
     {
+        Storage::fake('ftp');
+
         $this->assertInstanceOf(S3File::class, File::make('s3://bucket/key'));
+        $this->assertInstanceOf(FtpFile::class, File::make('ftp://foo.com/bar.txt'));
         $this->assertInstanceOf(LocalFile::class, File::make('/dev/null'));
         $this->assertInstanceOf(LocalFile::class, File::make('/tmp/foobar'));
         $this->assertInstanceOf(LocalFile::class, File::make('C:/foo/bar'));
@@ -29,6 +34,9 @@ class FileTest extends TestCase
 
     public function testMakeWriteable()
     {
+        Storage::fake('ftp');
+
+        $this->assertInstanceOf(FtpFile::class, File::makeWriteable('ftp://foo.com/bar.zip'));
         $this->assertInstanceOf(S3File::class, File::makeWriteable('s3://bucket/key'));
         $this->assertInstanceOf(LocalFile::class, File::makeWriteable('/tmp/foobar'));
         $this->assertInstanceOf(LocalFile::class, File::makeWriteable("C:/"));
@@ -114,5 +122,20 @@ class FileTest extends TestCase
 
         $this->assertInstanceOf(S3File::class, $file);
         $this->assertEquals('s3://my-test-bucket/my-prefix/test.txt', $file->getSource());
+    }
+
+    public function testFromFtpDisk()
+    {
+        $custom_disk_name = 'custom_ftp_disk';
+
+        config(['filesystems.disks.ftp.driver' => 'ftp']);
+        config(["filesystems.disks.$custom_disk_name.driver" => 'ftp']);
+
+        $file1 = File::makeFromDisk('ftp', 'file1.txt');
+        $file2 = File::makeFromDisk(Storage::disk($custom_disk_name), 'file2.txt');
+
+        $this->assertContainsOnlyInstancesOf(FtpFile::class, [$file1, $file2]);
+        $this->assertEquals('file1.txt', $file1->getSource());
+        $this->assertEquals('file2.txt', $file2->getSource());
     }
 }
