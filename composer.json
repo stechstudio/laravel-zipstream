@@ -26,8 +26,12 @@
     },
     "require-dev": {
         "league/flysystem-aws-s3-v3": "^3.28",
+        "league/flysystem-ftp": "^3.29",
         "orchestra/testbench": "^8.0|^9.0|^10.0",
         "phpunit/phpunit": "^9.0|^10.0|^11.5.3"
+    },
+    "suggest": {
+        "league/flysystem-ftp": "Allows FTP support."
     },
     "autoload": {
         "psr-4": {

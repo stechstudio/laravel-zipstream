@@ -2,6 +2,7 @@
 
 use Orchestra\Testbench\TestCase;
 use STS\ZipStream\Models\File;
+use STS\ZipStream\Models\FtpFile;
 use STS\ZipStream\Models\HttpFile;
 use STS\ZipStream\Models\LocalFile;
 use STS\ZipStream\Models\S3File;
@@ -20,6 +21,7 @@ class FileTest extends TestCase
     public function testMake()
     {
         $this->assertInstanceOf(S3File::class, File::make('s3://bucket/key'));
+        $this->assertInstanceOf(FtpFile::class, File::make('ftp://foo.com/bar.txt'));
         $this->assertInstanceOf(LocalFile::class, File::make('/dev/null'));
         $this->assertInstanceOf(LocalFile::class, File::make('/tmp/foobar'));
         $this->assertInstanceOf(LocalFile::class, File::make('C:/foo/bar'));
@@ -29,6 +31,7 @@ class FileTest extends TestCase
 
     public function testMakeWriteable()
     {
+        $this->assertInstanceOf(FtpFile::class, File::makeWriteable('ftp://foo.com/bar.zip'));
         $this->assertInstanceOf(S3File::class, File::makeWriteable('s3://bucket/key'));
         $this->assertInstanceOf(LocalFile::class, File::makeWriteable('/tmp/foobar'));
         $this->assertInstanceOf(LocalFile::class, File::makeWriteable("C:/"));
@@ -114,5 +117,23 @@ class FileTest extends TestCase
 
         $this->assertInstanceOf(S3File::class, $file);
         $this->assertEquals('s3://my-test-bucket/my-prefix/test.txt', $file->getSource());
+    }
+
+    public function testFromFtpDisk()
+    {
+        $options = [
+            'driver' => 'ftp',
+            'host'   => 'ftp_server',
+        ];
+
+        config(['filesystems.disks.ftp' => $options]);
+        config(['filesystems.disks.ftps' => $options + ['ssl' => true]]);
+
+        $file1 = File::makeFromDisk('ftp', 'file1.txt');
+        $file2 = File::makeFromDisk('ftps', 'file2.txt');
+
+        $this->assertContainsOnlyInstancesOf(FtpFile::class, [$file1, $file2]);
+        $this->assertEquals('ftp://ftp_server/file1.txt', $file1->getSource());
+        $this->assertEquals('ftps://ftp_server/file2.txt', $file2->getSource());
     }
 }
