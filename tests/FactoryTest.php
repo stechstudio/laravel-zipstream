@@ -120,6 +120,20 @@ class FactoryTest extends TestCase
         $this->assertInstanceOf(StubCustomFile::class, $file);
     }
 
+    public function testExtendIgnoresDuplicates()
+    {
+        $factory = app(Factory::class);
+        $factory->extend(StubCustomFile::class);
+        $factory->extend(StubCustomFile::class);
+        $factory->extend(StubCustomFile::class);
+
+        // Should only appear once despite multiple extend() calls
+        $reflection = new \ReflectionProperty($factory, 'types');
+        $types = $reflection->getValue($factory);
+
+        $this->assertCount(1, array_keys($types, StubCustomFile::class, true));
+    }
+
     public function testMakeFromDiskWithExtendedType()
     {
         $factory = app(Factory::class);

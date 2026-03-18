@@ -2,9 +2,7 @@
 
 namespace STS\ZipStream\Models;
 
-use Aws;
 use Aws\S3\S3Client;
-use Aws\S3\S3UriParser;
 use GuzzleHttp\Psr7\Utils;
 use Illuminate\Filesystem\AwsS3V3Adapter;
 use Illuminate\Filesystem\FilesystemAdapter;

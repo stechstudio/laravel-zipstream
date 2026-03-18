@@ -32,6 +32,6 @@ class ZipStreamServiceProvider extends PackageServiceProvider
 
     public function provides(): array
     {
-        return ['zipstream.builder', 'zipstream.s3client'];
+        return [Factory::class, 'zipstream.builder', 'zipstream.s3client'];
     }
 }

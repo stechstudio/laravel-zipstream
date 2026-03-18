@@ -12,12 +12,12 @@ class HttpFile extends File
 {
     private const HEADER_CONTENT_LENGTH = 'content-length';
 
+    private array $headers;
+
     public static function supports(string $source): bool
     {
         return Str::startsWith($source, 'http') && filter_var($source, FILTER_VALIDATE_URL);
     }
-
-    private array $headers;
 
     public function calculateFilesize(): int
     {

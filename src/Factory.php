@@ -21,7 +21,9 @@ class Factory
 
     public function extend(string $fileClass): self
     {
-        array_unshift($this->types, $fileClass);
+        if (!in_array($fileClass, $this->types)) {
+            array_unshift($this->types, $fileClass);
+        }
 
         return $this;
     }

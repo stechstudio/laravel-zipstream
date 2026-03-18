@@ -4,8 +4,8 @@ namespace STS\ZipStream\Models;
 
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Arr;
-use Psr\Http\Message\StreamInterface;
 use Illuminate\Support\Str;
+use Psr\Http\Message\StreamInterface;
 use STS\ZipStream\Contracts\FileContract;
 use STS\ZipStream\Factory;
 use STS\ZipStream\OutputStream;

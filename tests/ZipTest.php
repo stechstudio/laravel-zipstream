@@ -4,7 +4,6 @@ use GuzzleHttp\Psr7\BufferStream;
 use Illuminate\Support\Str;
 use STS\ZipStream\Builder;
 use STS\ZipStream\Models\File;
-use ZipArchive;
 use Orchestra\Testbench\TestCase;
 use STS\ZipStream\Facades\Zip;
 use STS\ZipStream\ZipStreamServiceProvider;
