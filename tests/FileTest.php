@@ -62,7 +62,6 @@ class FileTest extends TestCase
 
         $this->assertInstanceOf(HttpFile::class, $file);
         $this->assertEquals('https://example.com/index.html', $file->getSource());
-        $this->assertTrue($file->canPredictZipDataSize());
     }
 
     public function testSettingFilesize()

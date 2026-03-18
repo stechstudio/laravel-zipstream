@@ -3,7 +3,7 @@
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/stechstudio/laravel-zipstream.svg?style=flat-square)](https://packagist.org/packages/stechstudio/laravel-zipstream)
 [![Total Downloads](https://img.shields.io/packagist/dt/stechstudio/laravel-zipstream.svg?style=flat-square)](https://packagist.org/packages/stechstudio/laravel-zipstream)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
-![Build Status](https://img.shields.io/endpoint?url=https://app.chipperci.com/projects/5cc95e3c-628f-48c6-815c-1f16621c9514/status/master&style=flat-square)
+[![Tests](https://github.com/stechstudio/laravel-zipstream/actions/workflows/tests.yml/badge.svg)](https://github.com/stechstudio/laravel-zipstream/actions/workflows/tests.yml)
 
 A fast and simple streaming zip file downloader for Laravel. 
 
@@ -263,6 +263,67 @@ You might use an internal DB id for your cache name, so that the next time a use
 
 - `STS\ZipStream\Events\ZipStreaming`: Dispatched when a new zip stream begins processing
 - `STS\ZipStream\Events\ZipStreamed`: Dispatched when a zip finishes streaming 
+
+## Custom file types
+
+This package supports local files, S3, and HTTP URLs out of the box. If you need to support additional file sources (FTP, SFTP, encrypted filesystems, etc.), you can register your own file type.
+
+Create a class that extends `STS\ZipStream\Models\File` and implement the required methods:
+
+```php
+use GuzzleHttp\Psr7\Utils;
+use Illuminate\Filesystem\FilesystemAdapter;
+use Psr\Http\Message\StreamInterface;
+use STS\ZipStream\Models\File;
+use STS\ZipStream\OutputStream;
+
+class FtpFile extends File
+{
+    public static function supports(string $source): bool
+    {
+        return str_starts_with($source, 'ftp://') || str_starts_with($source, 'ftps://');
+    }
+
+    public static function supportsDisk(FilesystemAdapter $disk): bool
+    {
+        // Return true if this type can handle the given disk adapter
+        return $disk->getAdapter() instanceof \League\Flysystem\Ftp\FtpAdapter;
+    }
+
+    protected function buildReadableStream(): StreamInterface
+    {
+        return Utils::streamFor(fopen($this->source, 'rb'));
+    }
+
+    protected function buildWritableStream(): OutputStream
+    {
+        return new OutputStream(fopen($this->source, 'wb'));
+    }
+
+    public function calculateFilesize(): int
+    {
+        return filesize($this->source);
+    }
+
+    public function canPredictZipDataSize(): bool
+    {
+        return true;
+    }
+}
+```
+
+Then register it in a service provider:
+
+```php
+use STS\ZipStream\Facades\Zip;
+
+public function boot()
+{
+    Zip::extend(FtpFile::class);
+}
+```
+
+Your custom type will be checked before the built-in types, so you can even override default behavior by matching the same source patterns.
 
 ## Filename sanitization
 
