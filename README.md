@@ -264,6 +264,64 @@ You might use an internal DB id for your cache name, so that the next time a use
 - `STS\ZipStream\Events\ZipStreaming`: Dispatched when a new zip stream begins processing
 - `STS\ZipStream\Events\ZipStreamed`: Dispatched when a zip finishes streaming 
 
+## Custom file types
+
+This package supports local files, S3, and HTTP URLs out of the box. If you need to support additional file sources (FTP, SFTP, encrypted filesystems, etc.), you can register your own file type.
+
+Create a class that extends `STS\ZipStream\Models\File` and implement the required methods:
+
+```php
+use Illuminate\Filesystem\FilesystemAdapter;
+use STS\ZipStream\Models\File;
+
+class FtpFile extends File
+{
+    public static function supports(string $source): bool
+    {
+        return str_starts_with($source, 'ftp://') || str_starts_with($source, 'ftps://');
+    }
+
+    public static function supportsDisk(FilesystemAdapter $disk): bool
+    {
+        // Return true if this type can handle the given disk
+        return $disk->getAdapter() instanceof FtpAdapter;
+    }
+
+    protected function buildReadableStream(): StreamInterface
+    {
+        return Utils::streamFor(fopen($this->source, 'rb'));
+    }
+
+    protected function buildWritableStream(): OutputStream
+    {
+        return new OutputStream(fopen($this->source, 'wb'));
+    }
+
+    public function calculateFilesize(): int
+    {
+        return filesize($this->source);
+    }
+
+    public function canPredictZipDataSize(): bool
+    {
+        return true;
+    }
+}
+```
+
+Then register it in a service provider:
+
+```php
+use STS\ZipStream\Facades\Zip;
+
+public function boot()
+{
+    Zip::extend(FtpFile::class);
+}
+```
+
+Your custom type will be checked before the built-in types, so you can even override default behavior by matching the same source patterns.
+
 ## Filename sanitization
 
 By default, this package will try to translate any non-ascii character in filename or folder's name to ascii. For example, if your filename is `中文_にほんご_Ч_Ɯ_☺_someascii.txt`. It will become `__C___someascii.txt` using Laravel's `Str::ascii($path)`.
