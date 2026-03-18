@@ -4,6 +4,7 @@ namespace STS\ZipStream;
 
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
+use InvalidArgumentException;
 use STS\ZipStream\Exceptions\UnsupportedSourceDiskException;
 use STS\ZipStream\Models\File;
 use STS\ZipStream\Models\HttpFile;
@@ -21,6 +22,10 @@ class Factory
 
     public function extend(string $fileClass): self
     {
+        if (!is_subclass_of($fileClass, File::class)) {
+            throw new InvalidArgumentException("[$fileClass] must extend " . File::class);
+        }
+
         if (!in_array($fileClass, $this->types)) {
             array_unshift($this->types, $fileClass);
         }

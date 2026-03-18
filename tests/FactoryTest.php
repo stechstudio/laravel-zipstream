@@ -120,6 +120,22 @@ class FactoryTest extends TestCase
         $this->assertInstanceOf(StubCustomFile::class, $file);
     }
 
+    public function testExtendRejectsInvalidClass()
+    {
+        $factory = app(Factory::class);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $factory->extend('NotAClass');
+    }
+
+    public function testExtendRejectsNonFileSubclass()
+    {
+        $factory = app(Factory::class);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $factory->extend(\stdClass::class);
+    }
+
     public function testExtendIgnoresDuplicates()
     {
         $factory = app(Factory::class);

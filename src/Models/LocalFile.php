@@ -13,7 +13,9 @@ class LocalFile extends File
 {
     public static function supports(string $source): bool
     {
-        return Str::startsWith($source, '/') || preg_match('/^\w:[\/\\\\]/', $source) || file_exists($source);
+        return Str::startsWith($source, '/')
+            || preg_match('/^\w:[\/\\\\]/', $source)
+            || (!str_contains($source, '://') && file_exists($source));
     }
 
     public static function supportsDisk(FilesystemAdapter $disk): bool

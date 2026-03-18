@@ -271,8 +271,11 @@ This package supports local files, S3, and HTTP URLs out of the box. If you need
 Create a class that extends `STS\ZipStream\Models\File` and implement the required methods:
 
 ```php
+use GuzzleHttp\Psr7\Utils;
 use Illuminate\Filesystem\FilesystemAdapter;
+use Psr\Http\Message\StreamInterface;
 use STS\ZipStream\Models\File;
+use STS\ZipStream\OutputStream;
 
 class FtpFile extends File
 {
@@ -283,8 +286,8 @@ class FtpFile extends File
 
     public static function supportsDisk(FilesystemAdapter $disk): bool
     {
-        // Return true if this type can handle the given disk
-        return $disk->getAdapter() instanceof FtpAdapter;
+        // Return true if this type can handle the given disk adapter
+        return $disk->getAdapter() instanceof \League\Flysystem\Ftp\FtpAdapter;
     }
 
     protected function buildReadableStream(): StreamInterface
