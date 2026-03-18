@@ -27,8 +27,6 @@ abstract class File implements FileContract
 
     protected int $filesize;
 
-    protected StreamInterface $readStream;
-
     protected OutputStream $writeStream;
 
     public function __construct(string $source, ?string $zipPath = null, array $options = [])
@@ -152,11 +150,7 @@ abstract class File implements FileContract
 
     public function getReadableStream(): StreamInterface
     {
-        if (!isset($this->readStream)) {
-            $this->readStream = $this->buildReadableStream();
-        }
-
-        return $this->readStream;
+        return $this->buildReadableStream();
     }
 
     public function getWritableStream(): OutputStream
