@@ -3,6 +3,7 @@
 namespace STS\ZipStream\Models;
 
 use GuzzleHttp\Psr7\Utils;
+use Illuminate\Support\Str;
 use Psr\Http\Message\StreamInterface;
 use STS\ZipStream\Exceptions\NotWritableException;
 use STS\ZipStream\OutputStream;
@@ -10,6 +11,11 @@ use STS\ZipStream\OutputStream;
 class HttpFile extends File
 {
     private const HEADER_CONTENT_LENGTH = 'content-length';
+
+    public static function supports(string $source): bool
+    {
+        return Str::startsWith($source, 'http') && filter_var($source, FILTER_VALIDATE_URL);
+    }
 
     private array $headers;
 
